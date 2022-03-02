@@ -2691,7 +2691,7 @@ bool FffGcodeWriter::processSupportInfill(const SliceDataStorage& storage, Layer
             const coord_t support_line_width = default_support_line_width * (combine_idx + 1);
 
             Polygons support_polygons;
-            VariableWidthPaths wall_toolpaths_here;
+            VariableWidthPaths gap_filler_toolpaths; // In case of a zigzag infill pattern the Infill comp generates gap fillers for the initial offset from the outline to where the zigzag connectors will lie
             Polygons support_lines;
             const size_t max_density_idx = part.infill_area_per_combine_per_density.size() - 1;
             for(size_t density_idx = max_density_idx; (density_idx + 1) > 0; --density_idx)
@@ -2720,7 +2720,7 @@ bool FffGcodeWriter::processSupportInfill(const SliceDataStorage& storage, Layer
                                    max_resolution, max_deviation,
                                    wall_count, infill_origin, support_connect_zigzags,
                                    use_endpieces, skip_some_zags, zag_skip_count, pocket_size);
-                infill_comp.generate(wall_toolpaths_here, support_polygons, support_lines, infill_extruder.settings, storage.support.cross_fill_provider);
+                infill_comp.generate(gap_filler_toolpaths, support_polygons, support_lines, infill_extruder.settings, storage.support.cross_fill_provider);
             }
 
             setExtruder_addPrime(storage, gcode_layer, extruder_nr); // only switch extruder if we're sure we're going to switch
@@ -2729,7 +2729,7 @@ bool FffGcodeWriter::processSupportInfill(const SliceDataStorage& storage, Layer
             const bool alternate_inset_direction = infill_extruder.settings.get<bool>("material_alternate_walls");
             const bool alternate_layer_print_direction = alternate_inset_direction && gcode_layer.getLayerNr() % 2 == 1;
 
-            if(!wall_toolpaths_here.empty())
+            if ( ! gap_filler_toolpaths.empty())
             {
                 const GCodePathConfig& config = gcode_layer.configs_storage.support_infill_config[0];
                 constexpr bool retract_before_outer_wall = false;
@@ -2737,7 +2737,7 @@ bool FffGcodeWriter::processSupportInfill(const SliceDataStorage& storage, Layer
                 const ZSeamConfig z_seam_config(EZSeamType::SHORTEST, gcode_layer.getLastPlannedPositionOrStartingPosition(), EZSeamCornerPrefType::Z_SEAM_CORNER_PREF_NONE, false);
                 InsetOrderOptimizer wall_orderer(*this, storage, gcode_layer, infill_extruder.settings, extruder_nr,
                                                 config, config, config, config,
-                                                retract_before_outer_wall, wipe_dist, wipe_dist, extruder_nr, extruder_nr, z_seam_config, wall_toolpaths_here);
+                                                retract_before_outer_wall, wipe_dist, wipe_dist, extruder_nr, extruder_nr, z_seam_config, gap_filler_toolpaths);
                 added_something |= wall_orderer.addToLayer();
             }
             if(!support_polygons.empty())
