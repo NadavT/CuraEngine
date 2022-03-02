@@ -49,7 +49,7 @@ WallToolPaths::WallToolPaths(const Polygons& outline, const coord_t bead_width_0
 {
 }
 
-const VariableWidthPaths& WallToolPaths::generate()
+const VariableWidthInsets& WallToolPaths::generate()
 {
     const coord_t smallest_segment = settings.get<coord_t>("meshfix_maximum_resolution");
     const coord_t allowed_distance = settings.get<coord_t>("meshfix_maximum_deviation");
@@ -127,7 +127,7 @@ const VariableWidthPaths& WallToolPaths::generate()
 }
 
 
-void WallToolPaths::stitchToolPaths(VariableWidthPaths& toolpaths, const Settings& settings)
+void WallToolPaths::stitchToolPaths(VariableWidthInsets& toolpaths, const Settings& settings)
 {
     const coord_t stitch_distance = settings.get<coord_t>("wall_line_width_x") / 3 + 1; //In 0-width contours, junctions can cause up to 1-line-width gaps. Don't stitch more than 1 line width.
 
@@ -170,7 +170,7 @@ void WallToolPaths::stitchToolPaths(VariableWidthPaths& toolpaths, const Setting
     }
 }
 
-void WallToolPaths::removeSmallLines(VariableWidthPaths& toolpaths)
+void WallToolPaths::removeSmallLines(VariableWidthInsets& toolpaths)
 {
     for (VariableWidthLines& inset : toolpaths)
     {
@@ -192,7 +192,7 @@ void WallToolPaths::removeSmallLines(VariableWidthPaths& toolpaths)
     }
 }
 
-void WallToolPaths::simplifyToolPaths(VariableWidthPaths& toolpaths, const Settings& settings)
+void WallToolPaths::simplifyToolPaths(VariableWidthInsets& toolpaths, const Settings& settings)
 {
     for (size_t toolpaths_idx = 0; toolpaths_idx < toolpaths.size(); ++toolpaths_idx)
     {
@@ -206,7 +206,7 @@ void WallToolPaths::simplifyToolPaths(VariableWidthPaths& toolpaths, const Setti
     }
 }
 
-const VariableWidthPaths& WallToolPaths::getToolPaths()
+const VariableWidthInsets& WallToolPaths::getToolPaths()
 {
     if (!toolpaths_generated)
     {
@@ -215,7 +215,7 @@ const VariableWidthPaths& WallToolPaths::getToolPaths()
     return toolpaths;
 }
 
-void WallToolPaths::pushToolPaths(VariableWidthPaths& paths)
+void WallToolPaths::pushToolPaths(VariableWidthInsets& paths)
 {
     if (! toolpaths_generated)
     {
@@ -227,9 +227,9 @@ void WallToolPaths::pushToolPaths(VariableWidthPaths& paths)
 void WallToolPaths::separateOutInnerContour()
 {
     //We'll remove all 0-width paths from the original toolpaths and store them separately as polygons.
-    VariableWidthPaths actual_toolpaths;
+    VariableWidthInsets actual_toolpaths;
     actual_toolpaths.reserve(toolpaths.size()); //A bit too much, but the correct order of magnitude.
-    VariableWidthPaths contour_paths;
+    VariableWidthInsets contour_paths;
     contour_paths.reserve(toolpaths.size() / inset_count);
     inner_contour.clear();
     for (const VariableWidthLines& inset : toolpaths)
@@ -314,7 +314,7 @@ const Polygons& WallToolPaths::getInnerContour()
     return inner_contour;
 }
 
-bool WallToolPaths::removeEmptyToolPaths(VariableWidthPaths& toolpaths)
+bool WallToolPaths::removeEmptyToolPaths(VariableWidthInsets& toolpaths)
 {
     toolpaths.erase(std::remove_if(toolpaths.begin(), toolpaths.end(), [](const VariableWidthLines& lines)
                                    {

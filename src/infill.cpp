@@ -46,7 +46,7 @@ static inline int computeScanSegmentIdx(int x, int line_width)
 namespace cura
 {
 
-Polygons Infill::generateWallToolPaths(VariableWidthPaths& toolpaths, Polygons& outer_contour, const size_t wall_line_count, const coord_t line_width, const coord_t infill_overlap, const Settings& settings)
+Polygons Infill::generateWallToolPaths(VariableWidthInsets& toolpaths, Polygons& outer_contour, const size_t wall_line_count, const coord_t line_width, const coord_t infill_overlap, const Settings& settings)
 {
     outer_contour = outer_contour.offset(infill_overlap);
 
@@ -65,7 +65,7 @@ Polygons Infill::generateWallToolPaths(VariableWidthPaths& toolpaths, Polygons& 
     return inner_contour;
 }
 
-void Infill::generate(VariableWidthPaths& toolpaths, Polygons& result_polygons, Polygons& result_lines, const Settings& settings, const SierpinskiFillProvider* cross_fill_provider, const LightningLayer* lightning_trees, const SliceMeshStorage* mesh)
+void Infill::generate(VariableWidthInsets& toolpaths, Polygons& result_polygons, Polygons& result_lines, const Settings& settings, const SierpinskiFillProvider* cross_fill_provider, const LightningLayer* lightning_trees, const SliceMeshStorage* mesh)
 {
     if (outer_contour.empty())
     {
@@ -97,7 +97,7 @@ void Infill::generate(VariableWidthPaths& toolpaths, Polygons& result_polygons, 
         constexpr coord_t gap_wall_count = 1; // Only need one wall here, less even, in a sense.
         constexpr coord_t wall_0_inset = 0; //Don't apply any outer wall inset for these. That's just for the outer wall.
         WallToolPaths wall_toolpaths(inner_contour, infill_line_width, gap_wall_count, wall_0_inset, settings);
-        VariableWidthPaths gap_fill_paths = wall_toolpaths.getToolPaths();
+        VariableWidthInsets gap_fill_paths = wall_toolpaths.getToolPaths();
 
         // Add the gap filling to the toolpaths and make the new inner contour 'aware' of the gap infill:
         // (Can't use getContours here, becasue only _some_ of the lines Arachne has generated are needed.)
@@ -175,7 +175,7 @@ void Infill::generate(VariableWidthPaths& toolpaths, Polygons& result_polygons, 
     }
 }
 
-void Infill::_generate(VariableWidthPaths& toolpaths, Polygons& result_polygons, Polygons& result_lines, const Settings& settings, const SierpinskiFillProvider* cross_fill_provider, const LightningLayer * lightning_trees, const SliceMeshStorage* mesh)
+void Infill::_generate(VariableWidthInsets& toolpaths, Polygons& result_polygons, Polygons& result_lines, const Settings& settings, const SierpinskiFillProvider* cross_fill_provider, const LightningLayer * lightning_trees, const SliceMeshStorage* mesh)
 {
     if (inner_contour.empty()) return;
     if (line_distance == 0) return;
@@ -344,7 +344,7 @@ void Infill::generateLightningInfill(const LightningLayer* trees, Polygons& resu
     result_lines.add(trees->convertToLines(inner_contour, infill_line_width));
 }
 
-void Infill::generateConcentricInfill(VariableWidthPaths& toolpaths, const Settings& settings)
+void Infill::generateConcentricInfill(VariableWidthInsets& toolpaths, const Settings& settings)
 {
     constexpr coord_t wall_0_inset = 0; // Don't apply any outer wall inset for these. That's just for the outer wall.
     const bool iterative = line_distance > infill_line_width; // Do it all at once if there is not need for a gap, otherwise, iterate.
@@ -364,7 +364,7 @@ void Infill::generateConcentricInfill(VariableWidthPaths& toolpaths, const Setti
 
         const coord_t inset_wall_count = iterative ? 1 : std::numeric_limits<coord_t>::max();
         WallToolPaths wall_toolpaths(current_inset, infill_line_width, inset_wall_count, wall_0_inset, settings);
-        const VariableWidthPaths inset_paths = wall_toolpaths.getToolPaths();
+        const VariableWidthInsets inset_paths = wall_toolpaths.getToolPaths();
 
         toolpaths.insert(toolpaths.end(), inset_paths.begin(), inset_paths.end());
         current_inset = wall_toolpaths.getInnerContour().offset((infill_line_width / 2) - line_distance);

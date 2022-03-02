@@ -41,19 +41,19 @@ public:
      * Generates the Toolpaths
      * \return A reference to the newly create  ToolPaths
      */
-    const VariableWidthPaths& generate();
+    const VariableWidthInsets& generate();
 
     /*!
      * Gets the toolpaths, if this called before \p generate() it will first generate the Toolpaths
      * \return a reference to the toolpaths
      */
-    const VariableWidthPaths& getToolPaths();
+    const VariableWidthInsets& getToolPaths();
 
     /*!
      * Alternate 'get', for when the vector that'll be inserted in already exists.
      * \param The already existing (or empty) paths these new toolpaths are pushed into.
      */
-    void pushToolPaths(VariableWidthPaths& paths);
+    void pushToolPaths(VariableWidthInsets& paths);
 
     /*!
      * Compute the inner contour of the walls. This contour indicates where the walled area ends and its infill begins.
@@ -81,7 +81,7 @@ public:
      * \param toolpaths the VariableWidthPaths generated with \p generate()
      * \return true if there are still paths left. If all toolpaths were removed it returns false
      */
-    static bool removeEmptyToolPaths(VariableWidthPaths& toolpaths);
+    static bool removeEmptyToolPaths(VariableWidthInsets& toolpaths);
 
 protected:
     /*!
@@ -91,12 +91,12 @@ protected:
      * 
      * \param settings The settings as provided by the user
      */
-    static void stitchToolPaths(VariableWidthPaths& toolpaths, const Settings& settings);
+    static void stitchToolPaths(VariableWidthInsets& toolpaths, const Settings& settings);
 
     /*!
      * Remove polylines shorter than half the smallest line width along that polyline.
      */
-    static void removeSmallLines(VariableWidthPaths& toolpaths);
+    static void removeSmallLines(VariableWidthInsets& toolpaths);
 
     /*!
      * Simplifies the variable-width toolpaths by calling the simplify on every line in the toolpath using the provided
@@ -104,7 +104,7 @@ protected:
      * \param settings The settings as provided by the user
      * \return
      */
-    static void simplifyToolPaths(VariableWidthPaths& toolpaths, const Settings& settings);
+    static void simplifyToolPaths(VariableWidthInsets& toolpaths, const Settings& settings);
 
 private:
     const Polygons& outline; //<! A reference to the outline polygon that is the designated area
@@ -119,7 +119,7 @@ private:
     double small_area_length; //<! The length of the small features which are to be filtered out, this is squared into a surface
     coord_t transition_length; //<! The transitioning length when the amount of extrusion lines changes
     bool toolpaths_generated; //<! Are the toolpaths generated
-    VariableWidthPaths toolpaths; //<! The generated toolpaths
+    VariableWidthInsets toolpaths; //<! The generated toolpaths
     Polygons inner_contour;  //<! The inner contour of the generated toolpaths
     const Settings& settings;
 };

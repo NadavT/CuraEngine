@@ -109,7 +109,7 @@ public:
      * \param mesh A mesh for which to generate infill (should only be used for non-helper-mesh objects).
      * \param[in] cross_fill_provider The cross fractal subdivision decision functor
      */
-    void generate(VariableWidthPaths& toolpaths, Polygons& result_polygons, Polygons& result_lines, const Settings& settings, const SierpinskiFillProvider* cross_fill_provider = nullptr, const LightningLayer * lightning_layer = nullptr, const SliceMeshStorage* mesh = nullptr);
+    void generate(VariableWidthInsets& toolpaths, Polygons& result_polygons, Polygons& result_lines, const Settings& settings, const SierpinskiFillProvider* cross_fill_provider = nullptr, const LightningLayer * lightning_layer = nullptr, const SliceMeshStorage* mesh = nullptr);
 
     /*!
      * Generate the wall toolpaths of an infill area. It will return the inner contour and set the inner-contour.
@@ -123,12 +123,12 @@ public:
      * \param settings [in] A settings storage to use for generating variable-width walls.
      * \return The inner contour of the wall toolpaths
      */
-    static Polygons generateWallToolPaths(VariableWidthPaths& toolpaths, Polygons& outer_contour, const size_t wall_line_count, const coord_t line_width, const coord_t infill_overlap, const Settings& settings);
+    static Polygons generateWallToolPaths(VariableWidthInsets& toolpaths, Polygons& outer_contour, const size_t wall_line_count, const coord_t line_width, const coord_t infill_overlap, const Settings& settings);
 private:
     /*!
      * Generate the infill pattern without the infill_multiplier functionality
      */
-    void _generate(VariableWidthPaths& toolpaths, Polygons& result_polygons, Polygons& result_lines, const Settings& settings, const SierpinskiFillProvider* cross_fill_pattern = nullptr, const LightningLayer * lightning_layer = nullptr, const SliceMeshStorage* mesh = nullptr);
+    void _generate(VariableWidthInsets& toolpaths, Polygons& result_polygons, Polygons& result_lines, const Settings& settings, const SierpinskiFillProvider* cross_fill_pattern = nullptr, const LightningLayer * lightning_layer = nullptr, const SliceMeshStorage* mesh = nullptr);
 
     /*!
      * Multiply the infill lines, so that any single line becomes [infill_multiplier] lines next to each other.
@@ -256,7 +256,7 @@ private:
      * \param toolpaths (output) The resulting toolpaths
      * \param inset_value The offset between each consecutive two polygons
      */
-    void generateConcentricInfill(VariableWidthPaths& toolpaths, const Settings& settings);
+    void generateConcentricInfill(VariableWidthInsets& toolpaths, const Settings& settings);
 
     /*!
      * Generate a rectangular grid of infill lines
