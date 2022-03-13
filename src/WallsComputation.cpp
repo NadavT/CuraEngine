@@ -53,7 +53,7 @@ void WallsComputation::generateWalls(SliceLayerPart* part)
     const Ratio line_width_x_factor = first_layer ? settings.get<ExtruderTrain&>("wall_x_extruder_nr").settings.get<Ratio>("initial_layer_line_width_factor") : 1.0_r;
     coord_t line_width_x = settings.get<coord_t>("wall_line_width_x") * line_width_x_factor;
 
-    if (!first_layer && settings.get<bool>("ratio_based_walls"))
+    if (settings.get<bool>("ratio_based_walls"))
     {
         const coord_t wall_total_width = settings.get<coord_t>("wall_thickness");
         const double wall_line_width_ratio = settings.get<Ratio>("wall_line_width_ratio");
