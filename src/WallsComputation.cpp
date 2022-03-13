@@ -47,11 +47,23 @@ void WallsComputation::generateWalls(SliceLayerPart* part)
 
     const bool first_layer = layer_nr == 0;
     const Ratio line_width_0_factor = first_layer ? settings.get<ExtruderTrain&>("wall_0_extruder_nr").settings.get<Ratio>("initial_layer_line_width_factor") : 1.0_r;
-    const coord_t line_width_0 = settings.get<coord_t>("wall_line_width_0") * line_width_0_factor;
+    coord_t line_width_0 = settings.get<coord_t>("wall_line_width_0") * line_width_0_factor;
     const coord_t wall_0_inset = settings.get<coord_t>("wall_0_inset");
 
     const Ratio line_width_x_factor = first_layer ? settings.get<ExtruderTrain&>("wall_x_extruder_nr").settings.get<Ratio>("initial_layer_line_width_factor") : 1.0_r;
-    const coord_t line_width_x = settings.get<coord_t>("wall_line_width_x") * line_width_x_factor;
+    coord_t line_width_x = settings.get<coord_t>("wall_line_width_x") * line_width_x_factor;
+
+    if (!first_layer && settings.get<bool>("ratio_based_walls"))
+    {
+        const coord_t wall_total_width = settings.get<coord_t>("wall_thickness");
+        const double wall_line_width_ratio = settings.get<Ratio>("wall_line_width_ratio");
+        const coord_t min_line_width = settings.get<coord_t>("min_line_width");
+        const coord_t max_line_width = settings.get<coord_t>("max_line_width");
+        line_width_0 = std::min(std::max(static_cast<coord_t>(wall_total_width * wall_line_width_ratio), min_line_width), max_line_width);
+        const coord_t remaining_width = wall_total_width - line_width_0;
+        wall_count = std::ceil(static_cast<double>(remaining_width) / max_line_width) + 1;
+        line_width_x = (wall_count > 1) ? remaining_width / (wall_count - 1) : 0;
+    }
 
     // When spiralizing, generate the spiral insets using simple offsets instead of generating toolpaths
     if (spiralize)
