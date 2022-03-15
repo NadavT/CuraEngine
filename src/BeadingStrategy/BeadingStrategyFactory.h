@@ -15,6 +15,7 @@ enum class StrategyType
     Center,
     Distributed,
     InwardDistributed,
+    RatioDistributed,
     None,
     COUNT
 };

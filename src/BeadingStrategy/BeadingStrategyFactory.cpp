@@ -9,6 +9,7 @@
 #include "DistributedBeadingStrategy.h"
 #include "RedistributeBeadingStrategy.h"
 #include "OuterWallInsetBeadingStrategy.h"
+#include "RatioDistributedBeadingStrategy.h"
 
 #include <limits>
 
@@ -67,6 +68,9 @@ BeadingStrategyPtr BeadingStrategyFactory::makeStrategy
         case StrategyType::InwardDistributed:
             ret = make_unique<DistributedBeadingStrategy>(bar_preferred_wall_width, preferred_transition_length, transitioning_angle, wall_split_middle_threshold, wall_add_middle_threshold, inward_distributed_center_wall_count);
             break;
+        case StrategyType::RatioDistributed:
+            ret = make_unique<RatioDistributedBeadingStrategy>(std::vector<coord_t>({10, 10}), 5, preferred_transition_length, transitioning_angle, wall_split_middle_threshold, wall_add_middle_threshold, inward_distributed_center_wall_count);
+            break;
         default:
             logError("Cannot make strategy!\n");
             return nullptr;
@@ -80,7 +84,10 @@ BeadingStrategyPtr BeadingStrategyFactory::makeStrategy
     if (max_bead_count > 0)
     {
         logDebug("Applying the Redistribute meta-strategy with outer-wall width = %d, inner-wall width = %d", preferred_bead_width_outer, preferred_bead_width_inner);
-        ret = make_unique<RedistributeBeadingStrategy>(preferred_bead_width_outer, preferred_bead_width_inner, minimum_variable_line_width, move(ret));
+        if (type != StrategyType::RatioDistributed)
+        {
+            ret = make_unique<RedistributeBeadingStrategy>(preferred_bead_width_outer, preferred_bead_width_inner, minimum_variable_line_width, move(ret));
+        }
         //Apply the LimitedBeadingStrategy last, since that adds a 0-width marker wall which other beading strategies shouldn't touch.
         logDebug("Applying the Limited Beading meta-strategy with maximum bead count = %d.", max_bead_count);
         ret = make_unique<LimitedBeadingStrategy>(max_bead_count, move(ret));

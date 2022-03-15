@@ -363,6 +363,10 @@ template<>  StrategyType Settings::get<StrategyType>(const std::string& key) con
     {
         return StrategyType::InwardDistributed;
     }
+    else if (value == "ratio_distributed")
+    {
+        return StrategyType::RatioDistributed;
+    }
     else //Default.
     {
         return StrategyType::None;
