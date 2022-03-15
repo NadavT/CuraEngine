@@ -35,28 +35,33 @@ RatioDistributedBeadingStrategy::RatioDistributedBeadingStrategy(const std::vect
 
 coord_t RatioDistributedBeadingStrategy::getOptimalThickness(coord_t bead_count) const
 {
-    return optimal_width * bead_count;
+    // return optimal_width * bead_count;
     std::vector<coord_t> full_beads_width = getFixedOptimalWidthValues(bead_count);
 
+    // logDebug("Optimal thickness for %d = %d.\n", bead_count, std::accumulate(full_beads_width.cbegin(), full_beads_width.cend(), static_cast<coord_t>(0)));
     return std::accumulate(full_beads_width.cbegin(), full_beads_width.cend(), static_cast<coord_t>(0));
 }
 
 coord_t RatioDistributedBeadingStrategy::getTransitionThickness(coord_t lower_bead_count) const
 {
-    return lower_bead_count * optimal_width + optimal_width * (lower_bead_count % 2 == 1 ? wall_split_middle_threshold : wall_add_middle_threshold);
+    // return lower_bead_count * optimal_width + optimal_width * (lower_bead_count % 2 == 1 ? wall_split_middle_threshold : wall_add_middle_threshold);
     std::vector<coord_t> full_beads_width = getFixedOptimalWidthValues(lower_bead_count);
 
-    return getOptimalThickness(lower_bead_count) + full_beads_width[lower_bead_count / 2] * (lower_bead_count % 2 == 1 ? wall_split_middle_threshold : wall_add_middle_threshold);
+    const coord_t transition_thickness = getOptimalThickness(lower_bead_count) + full_beads_width[lower_bead_count / 2] * (lower_bead_count % 2 == 1 ? wall_split_middle_threshold : wall_add_middle_threshold);
+
+    // logDebug("Optimal transition thickness for %d = %d.\n", lower_bead_count, transition_thickness);
+    return transition_thickness;
 }
 
 coord_t RatioDistributedBeadingStrategy::getOptimalBeadCount(coord_t thickness) const
 {
-    return (thickness + optimal_width / 2) / optimal_width;
+    // return (thickness + optimal_width / 2) / optimal_width;
     const coord_t max_width = std::accumulate(optimal_width_values.cbegin(), optimal_width_values.cend(), static_cast<coord_t>(0));
     if (thickness >= max_width)
     {
         const coord_t width_diff = thickness - max_width;
         const coord_t optimal_remaining_width = optimal_width_values[optimal_width_values.size() / 2];
+        // logDebug("Optimal bead count for %d = %d.\n", thickness, optimal_width_values.size() + ((width_diff + optimal_remaining_width / 2) / optimal_remaining_width));
         return optimal_width_values.size() + ((width_diff + optimal_remaining_width / 2) / optimal_remaining_width);
     }
     else
@@ -70,6 +75,7 @@ coord_t RatioDistributedBeadingStrategy::getOptimalBeadCount(coord_t thickness) 
                 return i * 2;
             }
         }
+        // logDebug("Optimal bead count for %d = %d.\n", thickness, optimal_width_values.size());
         return optimal_width_values.size();
     }
 }
@@ -86,11 +92,11 @@ std::vector<coord_t> RatioDistributedBeadingStrategy::getFixedOptimalWidthValues
     else
     {
         beads_diff = -beads_diff;
-        std::vector<coord_t> full_beads_widths = optimal_width_values;
         auto left_bound = full_beads_widths.begin() + full_beads_widths.size() / 2 - beads_diff / 2;
         auto right_bound = full_beads_widths.begin() + full_beads_widths.size() / 2 + beads_diff / 2 + ((beads_diff % 2 == 1) ? 1 : 0);
         full_beads_widths.erase(left_bound, right_bound);
     }
+    // logDebug("Bead count after fixing: wanted = %d, actual %d.\n", bead_count, full_beads_widths.size());
     return full_beads_widths;
 }
 
@@ -102,7 +108,8 @@ BeadingStrategy::Beading RatioDistributedBeadingStrategy::compute(coord_t thickn
     std::vector<coord_t> full_beads_width = getFixedOptimalWidthValues(bead_count);
     if (bead_count > 2)
     {
-        const coord_t to_be_divided = thickness - bead_count * optimal_width;// getOptimalThickness(bead_count);
+        const coord_t to_be_divided = thickness - getOptimalThickness(bead_count);// getOptimalThickness(bead_count);
+        // const coord_t to_be_divided = thickness - bead_count * optimal_width;// getOptimalThickness(bead_count);
         const float middle = static_cast<float>(bead_count - 1) / 2;
 
         const auto getWeight = [middle, this](coord_t bead_idx)
@@ -123,7 +130,9 @@ BeadingStrategy::Beading RatioDistributedBeadingStrategy::compute(coord_t thickn
         {
             const float weight_fraction = weights[bead_idx] / total_weight;
             const coord_t splitup_left_over_weight = to_be_divided * weight_fraction;
-            const coord_t width = optimal_width + splitup_left_over_weight; //full_beads_width[bead_idx] + splitup_left_over_weight;
+            // const coord_t width = optimal_width + splitup_left_over_weight;
+            const coord_t width = full_beads_width[bead_idx] + splitup_left_over_weight;
+            // logDebug("Bead width %d = %d.\n", bead_idx, width);
             if (bead_idx == 0)
             {
                 ret.toolpath_locations.emplace_back(width / 2);
