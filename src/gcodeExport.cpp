@@ -737,6 +737,11 @@ void GCodeExport::writeExtrusion(const coord_t x, const coord_t y, const coord_t
     }
 
 #ifdef ASSERT_INSANE_OUTPUT
+    // TODO TECHNION NADAV: This happened on a specific configuration (probably invalid width for nozzle)
+    if (speed >= 1000 || speed < 1)
+    {
+        logDebug("Invalid speed: %d", speed);
+    }
     assert(speed < 1000 && speed > 1); // normal F values occurring in UM2 gcode (this code should not be compiled for release)
     assert(currentPosition != no_point3);
     assert(Point3(x, y, z) != no_point3);
