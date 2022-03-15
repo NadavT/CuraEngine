@@ -84,9 +84,9 @@ BeadingStrategyPtr BeadingStrategyFactory::makeStrategy
     }
     if (max_bead_count > 0)
     {
-        logDebug("Applying the Redistribute meta-strategy with outer-wall width = %d, inner-wall width = %d", preferred_bead_width_outer, preferred_bead_width_inner);
         if (type != StrategyType::RatioDistributed)
         {
+            logDebug("Applying the Redistribute meta-strategy with outer-wall width = %d, inner-wall width = %d", preferred_bead_width_outer, preferred_bead_width_inner);
             ret = make_unique<RedistributeBeadingStrategy>(preferred_bead_width_outer, preferred_bead_width_inner, minimum_variable_line_width, move(ret));
         }
         //Apply the LimitedBeadingStrategy last, since that adds a 0-width marker wall which other beading strategies shouldn't touch.
