@@ -69,6 +69,28 @@ const VariableWidthPaths& WallToolPaths::generate()
     prepared_outline.removeDegenerateVerts();
     prepared_outline.removeSmallAreas(small_area_length * small_area_length, false);
 
+    std::vector<coord_t> beads_width;
+
+    if (strategy_type == StrategyType::RatioDistributed)
+    {
+        const coord_t wall_total_width = settings.get<coord_t>("wall_thickness");
+        std::istringstream ratios;
+        ratios.str(settings.get<std::string>("perimeters_ratio"));
+        for (std::string ratio; std::getline(ratios, ratio, ':'); ) {
+            beads_width.push_back(static_cast<coord_t>(atof(ratio.c_str()) * wall_total_width));
+        }
+        std::reverse(beads_width.begin(), beads_width.end());
+        beads_width.erase(beads_width.begin() + inset_count, beads_width.end());
+        beads_width.insert(beads_width.end(), beads_width.rbegin(), beads_width.rend());
+        // logDebug("beads widths:\n");
+        // int i = 0;
+        // for (auto width : beads_width)
+        // {
+        //     logDebug("bead %d: %d\n", i, width);
+        //     i++;
+        // }
+    }
+
     if (prepared_outline.area() > 0)
     {
         const coord_t wall_transition_length = settings.get<coord_t>("wall_transition_length");
@@ -90,7 +112,8 @@ const VariableWidthPaths& WallToolPaths::generate()
                 wall_add_middle_threshold,
                 max_bead_count,
                 wall_0_inset,
-                wall_distribution_count
+                wall_distribution_count,
+                beads_width
             );
         const coord_t transition_filter_dist = settings.get<coord_t>("wall_transition_filter_distance");
         SkeletalTrapezoidation wall_maker

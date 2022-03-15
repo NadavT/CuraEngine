@@ -50,6 +50,7 @@ BeadingStrategyPtr BeadingStrategyFactory::makeStrategy
     const coord_t max_bead_count,
     const coord_t outer_wall_offset,
     const int inward_distributed_center_wall_count,
+    const std::vector<coord_t>& bead_widths,
     const double minimum_variable_line_width
 )
 {
@@ -69,7 +70,7 @@ BeadingStrategyPtr BeadingStrategyFactory::makeStrategy
             ret = make_unique<DistributedBeadingStrategy>(bar_preferred_wall_width, preferred_transition_length, transitioning_angle, wall_split_middle_threshold, wall_add_middle_threshold, inward_distributed_center_wall_count);
             break;
         case StrategyType::RatioDistributed:
-            ret = make_unique<RatioDistributedBeadingStrategy>(std::vector<coord_t>({10, 10}), 5, preferred_transition_length, transitioning_angle, wall_split_middle_threshold, wall_add_middle_threshold, inward_distributed_center_wall_count);
+            ret = make_unique<RatioDistributedBeadingStrategy>(bead_widths, 50, preferred_transition_length, transitioning_angle, wall_split_middle_threshold, wall_add_middle_threshold, inward_distributed_center_wall_count);
             break;
         default:
             logError("Cannot make strategy!\n");
