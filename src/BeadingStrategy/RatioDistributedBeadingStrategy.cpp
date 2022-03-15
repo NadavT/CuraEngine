@@ -38,7 +38,10 @@ coord_t RatioDistributedBeadingStrategy::getOptimalThickness(coord_t bead_count)
     // return optimal_width * bead_count;
     std::vector<coord_t> full_beads_width = getFixedOptimalWidthValues(bead_count);
 
-    // logDebug("Optimal thickness for %d = %d.\n", bead_count, std::accumulate(full_beads_width.cbegin(), full_beads_width.cend(), static_cast<coord_t>(0)));
+    // if (optimal_width_values.size() == 2)
+    // {
+    //     logDebug("Optimal thickness for %d = %d.\n", bead_count, std::accumulate(full_beads_width.cbegin(), full_beads_width.cend(), static_cast<coord_t>(0)));
+    // }
     return std::accumulate(full_beads_width.cbegin(), full_beads_width.cend(), static_cast<coord_t>(0));
 }
 
@@ -49,7 +52,10 @@ coord_t RatioDistributedBeadingStrategy::getTransitionThickness(coord_t lower_be
 
     const coord_t transition_thickness = getOptimalThickness(lower_bead_count) + full_beads_width[lower_bead_count / 2] * (lower_bead_count % 2 == 1 ? wall_split_middle_threshold : wall_add_middle_threshold);
 
-    // logDebug("Optimal transition thickness for %d = %d.\n", lower_bead_count, transition_thickness);
+    // if (optimal_width_values.size() == 2)
+    // {
+    //     logDebug("Optimal transition thickness for %d = %d.\n", lower_bead_count, transition_thickness);
+    // }
     return transition_thickness;
 }
 
@@ -61,7 +67,10 @@ coord_t RatioDistributedBeadingStrategy::getOptimalBeadCount(coord_t thickness) 
     {
         const coord_t width_diff = thickness - max_width;
         const coord_t optimal_remaining_width = optimal_width_values[optimal_width_values.size() / 2];
-        // logDebug("Optimal bead count for %d = %d.\n", thickness, optimal_width_values.size() + ((width_diff + optimal_remaining_width / 2) / optimal_remaining_width));
+        // if (optimal_width_values.size() == 2)
+        // {
+        //     logDebug("Optimal bead count for %d = %d.\n", thickness, optimal_width_values.size() + ((width_diff + optimal_remaining_width / 2) / optimal_remaining_width));
+        // }
         return optimal_width_values.size() + ((width_diff + optimal_remaining_width / 2) / optimal_remaining_width);
     }
     else
@@ -75,7 +84,10 @@ coord_t RatioDistributedBeadingStrategy::getOptimalBeadCount(coord_t thickness) 
                 return i * 2;
             }
         }
-        // logDebug("Optimal bead count for %d = %d.\n", thickness, optimal_width_values.size());
+        // if (optimal_width_values.size() == 2)
+        // {
+        //     logDebug("Optimal bead count for %d = %d.\n", thickness, optimal_width_values.size());
+        // }
         return optimal_width_values.size();
     }
 }
@@ -96,7 +108,10 @@ std::vector<coord_t> RatioDistributedBeadingStrategy::getFixedOptimalWidthValues
         auto right_bound = full_beads_widths.begin() + full_beads_widths.size() / 2 + beads_diff / 2 + ((beads_diff % 2 == 1) ? 1 : 0);
         full_beads_widths.erase(left_bound, right_bound);
     }
-    // logDebug("Bead count after fixing: wanted = %d, actual %d.\n", bead_count, full_beads_widths.size());
+    // if (optimal_width_values.size() == 2)
+    // {
+    //     logDebug("Bead count after fixing: wanted = %d, actual %d.\n", bead_count, full_beads_widths.size());
+    // }
     return full_beads_widths;
 }
 
@@ -132,7 +147,10 @@ BeadingStrategy::Beading RatioDistributedBeadingStrategy::compute(coord_t thickn
             const coord_t splitup_left_over_weight = to_be_divided * weight_fraction;
             // const coord_t width = optimal_width + splitup_left_over_weight;
             const coord_t width = full_beads_width[bead_idx] + splitup_left_over_weight;
-            // logDebug("Bead width %d = %d.\n", bead_idx, width);
+            // if (optimal_width_values.size() == 2)
+            // {
+            //     logDebug("Bead width %d = %d.\n", bead_idx, width);
+            // }
             if (bead_idx == 0)
             {
                 ret.toolpath_locations.emplace_back(width / 2);
