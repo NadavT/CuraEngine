@@ -48,7 +48,7 @@ coord_t RatioDistributedBeadingStrategy::getOptimalThickness(coord_t bead_count)
 coord_t RatioDistributedBeadingStrategy::getTransitionThickness(coord_t lower_bead_count) const
 {
     // return lower_bead_count * optimal_width + optimal_width * (lower_bead_count % 2 == 1 ? wall_split_middle_threshold : wall_add_middle_threshold);
-    std::vector<coord_t> full_beads_width = getFixedOptimalWidthValues(lower_bead_count);
+    std::vector<coord_t> full_beads_width = getFixedOptimalWidthValues(lower_bead_count + 1);
 
     const coord_t transition_thickness = getOptimalThickness(lower_bead_count) + full_beads_width[lower_bead_count / 2] * (lower_bead_count % 2 == 1 ? wall_split_middle_threshold : wall_add_middle_threshold);
 
@@ -81,7 +81,7 @@ coord_t RatioDistributedBeadingStrategy::getOptimalBeadCount(coord_t thickness) 
             current_thickness += 2 * optimal_width_values[i];
             if (current_thickness >= thickness)
             {
-                return i * 2;
+                return (i + 1) * 2;
             }
         }
         // if (optimal_width_values.size() == 2)
