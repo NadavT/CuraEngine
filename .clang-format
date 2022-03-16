@@ -31,5 +31,5 @@ SpacesInParentheses: 'false'
 Standard: Cpp11
 TabWidth: '5'
 UseTab: Never
-
+ColumnLimit: 0
 ...

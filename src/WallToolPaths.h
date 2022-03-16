@@ -24,7 +24,7 @@ public:
      * \param wall_0_inset How far to inset the outer wall, to make it adhere better to other walls.
      * \param settings The settings as provided by the user
      */
-    WallToolPaths(const Polygons& outline, const coord_t nominal_bead_width, const size_t inset_count, const coord_t wall_0_inset, const Settings& settings);
+    WallToolPaths(const Polygons& outline, const coord_t nominal_bead_width, const size_t inset_count, const coord_t wall_0_inset, const Settings& settings, bool no_ratio = false);
 
     /*!
      * A class that creates the toolpaths given an outline, nominal bead width and maximum amount of walls
@@ -35,7 +35,7 @@ public:
      * \param wall_0_inset How far to inset the outer wall, to make it adhere better to other walls.
      * \param settings The settings as provided by the user
      */
-    WallToolPaths(const Polygons& outline, const coord_t bead_width_0, const coord_t bead_width_x, const size_t inset_count, const coord_t wall_0_inset, const Settings& settings);
+    WallToolPaths(const Polygons& outline, const coord_t bead_width_0, const coord_t bead_width_x, const size_t inset_count, const coord_t wall_0_inset, const Settings& settings, bool no_ratio = false);
 
     /*!
      * Generates the Toolpaths
@@ -124,6 +124,7 @@ private:
     VariableWidthPaths toolpaths; //<! The generated toolpaths
     Polygons inner_contour;  //<! The inner contour of the generated toolpaths
     const Settings& settings;
+    const bool no_ratio;
 };
 } // namespace cura
 

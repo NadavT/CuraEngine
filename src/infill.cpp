@@ -53,7 +53,7 @@ Polygons Infill::generateWallToolPaths(VariableWidthPaths& toolpaths, Polygons& 
     if (wall_line_count > 0)
     {
         constexpr coord_t wall_0_inset = 0; //Don't apply any outer wall inset for these. That's just for the outer wall.
-        WallToolPaths wall_toolpaths(outer_contour, line_width, wall_line_count, wall_0_inset, settings);
+        WallToolPaths wall_toolpaths(outer_contour, line_width, wall_line_count, wall_0_inset, settings, true);
         wall_toolpaths.pushToolPaths(toolpaths);
         inner_contour = wall_toolpaths.getInnerContour();
     }
@@ -95,7 +95,7 @@ void Infill::generate(VariableWidthPaths& toolpaths, Polygons& result_polygons, 
         // (Note that we give it a _full_ line width here, because unlike the old situation this can produce walls that are actually smaller than that.)
         constexpr coord_t gap_wall_count = 1; // Only need one wall here, less even, in a sense.
         constexpr coord_t wall_0_inset = 0; //Don't apply any outer wall inset for these. That's just for the outer wall.
-        WallToolPaths wall_toolpaths(inner_contour, infill_line_width, gap_wall_count, wall_0_inset, settings);
+        WallToolPaths wall_toolpaths(inner_contour, infill_line_width, gap_wall_count, wall_0_inset, settings, true);
         VariableWidthPaths gap_fill_paths = wall_toolpaths.getToolPaths();
 
         // Add the gap filling to the toolpaths and make the new inner contour 'aware' of the gap infill:
@@ -365,7 +365,7 @@ void Infill::generateConcentricInfill(VariableWidthPaths& toolpaths, const Setti
         }
 
         const coord_t inset_wall_count = iterative ? 1 : std::numeric_limits<coord_t>::max();
-        WallToolPaths wall_toolpaths(current_inset, infill_line_width, inset_wall_count, wall_0_inset, settings);
+        WallToolPaths wall_toolpaths(current_inset, infill_line_width, inset_wall_count, wall_0_inset, settings, true);
         const VariableWidthPaths inset_paths = wall_toolpaths.getToolPaths();
 
         toolpaths.insert(toolpaths.end(), inset_paths.begin(), inset_paths.end());

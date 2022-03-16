@@ -54,7 +54,6 @@ namespace cura
 
         virtual std::string toString() const;
 
-    protected:
         /*!
          * Determine the outer bead width.
          *
@@ -90,6 +89,7 @@ namespace cura
          */
         static bool validateInnerBeadWidths(Beading& beading, coord_t minimum_width_inner);
 
+    protected:
         BeadingStrategyPtr parent;
         coord_t optimal_width_outer;
         coord_t optimal_width_inner;
