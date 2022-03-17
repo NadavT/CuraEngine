@@ -140,7 +140,7 @@ const VariableWidthPaths& WallToolPaths::generate()
         wall_maker.generateToolpaths(toolpaths);
         computeInnerContour();
     }
-    simplifyToolPaths(toolpaths, settings);
+    // simplifyToolPaths(toolpaths, settings);
 
     removeEmptyToolPaths(toolpaths);
     assert(std::is_sorted(toolpaths.cbegin(), toolpaths.cend(),
