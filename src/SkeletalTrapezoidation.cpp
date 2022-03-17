@@ -19,6 +19,8 @@
 
 #include "utils/macros.h"
 
+#include <fstream>
+
 #define SKELETAL_TRAPEZOIDATION_BEAD_SEARCH_MAX 1000 //A limit to how long it'll keep searching for adjacent beads. Increasing will re-use beadings more often (saving performance), but search longer for beading (costing performance).
 
 namespace cura
@@ -446,6 +448,39 @@ void SkeletalTrapezoidation::constructFromPolygons(const Polygons& polys)
         {
             edge.from->incident_edge = &edge;
         }
+    }
+
+    #pragma omp critical
+    {
+    RUN_ONCE(
+        std::ofstream plotFile;
+        plotFile.open("layer_plot.txt");
+        for (const auto & segment : segments)
+        {
+            plotFile << "plt.plot([" << segment.from().X << ", " << segment.to().X << "], [" << segment.from().Y << ", " << segment.to().Y << "])" << std::endl;
+        }
+        plotFile.close();
+
+        std::ofstream edgesFile;
+        plotFile.open("skeleton_plot.txt");
+        edgesFile.open("edges_plot.txt");
+        for (node_t& node : graph.nodes)
+        {
+            plotFile << "plt.plot(" << node.p.X << ", " << node.p.Y << ", marker='o')" << std::endl;
+            plotFile << "plt.annotate(" << node.data.distance_to_boundary << ", (" << node.p.X << ", " << node.p.Y << "))" << std::endl;
+        }
+        for (edge_t& edge : graph.edges)
+        {
+            if (edge.from && edge.to)
+            {
+                plotFile << "plt.plot([" << edge.from->p.X << ", " << edge.to->p.X << "], [" << edge.from->p.Y << ", " << edge.to->p.Y << "], linestyle='dashed')" << std::endl;
+                edgesFile << "plt.plot([" << edge.from->p.X << ", " << edge.to->p.X << "], ";
+                edgesFile << "[" << edge.from->p.Y << ", " << edge.to->p.Y << "])" << std::endl;
+            }
+        }
+        edgesFile.close();
+        plotFile.close();
+    );
     }
 }
 
