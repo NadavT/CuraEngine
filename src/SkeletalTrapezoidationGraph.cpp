@@ -345,12 +345,12 @@ void SkeletalTrapezoidationGraph::makeRib(edge_t*& prev_edge, Point start_source
     Point p = LinearAlg2D::getClosestOnLine(prev_edge->to->p, start_source_point, end_source_point);
     coord_t dist = vSize(prev_edge->to->p - p);
     prev_edge->to->data.distance_to_boundary = dist;
-    prev_edge->to->data.width_factor = width_factor;
     assert(dist >= 0);
 
     nodes.emplace_front(SkeletalTrapezoidationJoint(), p);
     node_t* node = &nodes.front();
     node->data.distance_to_boundary = 0;
+    node->data.width_factor = width_factor;
     
     edges.emplace_front(SkeletalTrapezoidationEdge(SkeletalTrapezoidationEdge::EdgeType::EXTRA_VD));
     edge_t* forth_edge = &edges.front();
