@@ -17,7 +17,7 @@ CenterDeviationBeadingStrategy::CenterDeviationBeadingStrategy(const coord_t pre
     name = "CenterDeviationBeadingStrategy";
 }
 
-CenterDeviationBeadingStrategy::Beading CenterDeviationBeadingStrategy::compute(coord_t thickness, coord_t bead_count) const
+CenterDeviationBeadingStrategy::Beading CenterDeviationBeadingStrategy::compute(coord_t thickness, coord_t bead_count, coord_t distance_to_source) const
 {
     Beading ret;
 
@@ -34,7 +34,7 @@ CenterDeviationBeadingStrategy::Beading CenterDeviationBeadingStrategy::compute(
             const coord_t inner_bead_widths = optimal_width + diff_thickness / 2;
             if (inner_bead_widths < minimum_line_width_add)
             {
-                return compute(thickness, bead_count - 1);
+                return compute(thickness, bead_count - 1, distance_to_source);
             }
             ret.bead_widths[center_bead_idx - 1] = inner_bead_widths;
             ret.bead_widths[center_bead_idx] = inner_bead_widths;
@@ -44,7 +44,7 @@ CenterDeviationBeadingStrategy::Beading CenterDeviationBeadingStrategy::compute(
             const coord_t inner_bead_widths = optimal_width + diff_thickness;
             if (inner_bead_widths < minimum_line_width_split)
             {
-                return compute(thickness, bead_count - 1);
+                return compute(thickness, bead_count - 1, distance_to_source);
             }
             ret.bead_widths[center_bead_idx] = inner_bead_widths;
         }

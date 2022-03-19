@@ -34,11 +34,11 @@ LimitedBeadingStrategy::LimitedBeadingStrategy(const coord_t max_bead_count, Bea
     }
 }
 
-LimitedBeadingStrategy::Beading LimitedBeadingStrategy::compute(coord_t thickness, coord_t bead_count) const
+LimitedBeadingStrategy::Beading LimitedBeadingStrategy::compute(coord_t thickness, coord_t bead_count, coord_t distance_to_source) const
 {
-    if (bead_count <= max_bead_count)
+    if (thickness == distance_to_source && bead_count <= max_bead_count)
     {
-        Beading ret = parent->compute(thickness, bead_count);
+        Beading ret = parent->compute(thickness, bead_count, distance_to_source);
         bead_count = ret.toolpath_locations.size();
 
         if (bead_count % 2 == 0 && bead_count == max_bead_count)
@@ -50,14 +50,14 @@ LimitedBeadingStrategy::Beading LimitedBeadingStrategy::compute(coord_t thicknes
         }
         return ret;
     }
-    assert(bead_count == max_bead_count + 1);
-    if(bead_count != max_bead_count + 1)
-    {
-        RUN_ONCE(logWarning("Too many beads! %i != %i", bead_count, max_bead_count + 1));
-    }
+    // assert(bead_count == max_bead_count + 1);
+    // if(bead_count != max_bead_count + 1)
+    // {
+    //     RUN_ONCE(logWarning("Too many beads! %i != %i", bead_count, max_bead_count + 1));
+    // }
 
     coord_t optimal_thickness = parent->getOptimalThickness(max_bead_count);
-    Beading ret = parent->compute(optimal_thickness, max_bead_count);
+    Beading ret = parent->compute(optimal_thickness, max_bead_count, distance_to_source);
     bead_count = ret.toolpath_locations.size();
     ret.left_over += thickness - ret.total_thickness;
     ret.total_thickness = thickness;
@@ -70,7 +70,7 @@ LimitedBeadingStrategy::Beading LimitedBeadingStrategy::compute(coord_t thicknes
     }
     for (coord_t bead_idx = 0; bead_idx < (bead_count + 1) / 2; bead_idx++)
     {
-        ret.toolpath_locations[bead_count - 1 - bead_idx] = thickness - ret.toolpath_locations[bead_idx];
+        ret.toolpath_locations[bead_count - 1 - bead_idx] = distance_to_source - ret.toolpath_locations[bead_idx];
     }
 
     //Create a "fake" inner wall with 0 width to indicate the edge of the walled area.
@@ -114,6 +114,7 @@ coord_t LimitedBeadingStrategy::getTransitionThickness(coord_t lower_bead_count)
 
 coord_t LimitedBeadingStrategy::getOptimalBeadCount(coord_t thickness) const
 {
+    return parent->getOptimalBeadCount(thickness);
     coord_t parent_bead_count = parent->getOptimalBeadCount(thickness);
     if (parent_bead_count <= max_bead_count)
     {

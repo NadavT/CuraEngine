@@ -27,7 +27,7 @@ public:
 
     virtual ~WideningBeadingStrategy() override = default;
 
-    virtual Beading compute(coord_t thickness, coord_t bead_count) const override;
+    virtual Beading compute(coord_t thickness, coord_t bead_count, coord_t distance_to_source) const override;
     virtual coord_t getOptimalThickness(coord_t bead_count) const override;
     virtual coord_t getTransitionThickness(coord_t lower_bead_count) const override;
     virtual coord_t getOptimalBeadCount(coord_t thickness) const override;

@@ -55,7 +55,7 @@ std::string RedistributeBeadingStrategy::toString() const
     return toString() + parent->toString();
 }
 
-BeadingStrategy::Beading RedistributeBeadingStrategy::compute(coord_t thickness, coord_t bead_count) const
+BeadingStrategy::Beading RedistributeBeadingStrategy::compute(coord_t thickness, coord_t bead_count, coord_t distance_to_source) const
 {
     Beading ret;
     if (bead_count > 2)
@@ -68,9 +68,10 @@ BeadingStrategy::Beading RedistributeBeadingStrategy::compute(coord_t thickness,
         // thickness equal to two times the optimal outer width and the minimal inner wall width.
         const coord_t virtual_thickness = thickness - outer_bead_width * 2;
         const coord_t virtual_bead_count = bead_count - 2;
+        const coord_t virtual_distance_to_source = distance_to_source - outer_bead_width * 2;
 
         // Calculate the beads and widths of the inner walls only
-        ret = parent->compute(virtual_thickness, virtual_bead_count);
+        ret = parent->compute(virtual_thickness, virtual_bead_count, virtual_distance_to_source
 
         // Insert the outer beads
         ret.bead_widths.insert(ret.bead_widths.begin(), outer_bead_width);
@@ -78,7 +79,7 @@ BeadingStrategy::Beading RedistributeBeadingStrategy::compute(coord_t thickness,
     }
     else
     {
-        ret = parent->compute(thickness, bead_count);
+        ret = parent->compute(thickness, bead_count, distance_to_source);
     }
 
     // Filter out beads that violate the minimum inner wall widths and recompute if necessary
@@ -86,7 +87,7 @@ BeadingStrategy::Beading RedistributeBeadingStrategy::compute(coord_t thickness,
     const bool removed_inner_beads = validateInnerBeadWidths(ret, outer_transition_width);
     if (removed_inner_beads)
     {
-        ret = compute(thickness, bead_count - 1);
+        ret = compute(thickness, bead_count - 1, distance_to_source);
     }
 
     // Ensure that the positions of the beads are distributed over the thickness

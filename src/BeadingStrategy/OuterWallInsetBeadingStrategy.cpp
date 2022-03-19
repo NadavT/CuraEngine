@@ -41,9 +41,9 @@ std::string OuterWallInsetBeadingStrategy::toString() const
     return std::string("OuterWallOfsetBeadingStrategy+") + parent->toString();
 }
 
-BeadingStrategy::Beading OuterWallInsetBeadingStrategy::compute(coord_t thickness, coord_t bead_count) const
+BeadingStrategy::Beading OuterWallInsetBeadingStrategy::compute(coord_t thickness, coord_t bead_count, coord_t distance_to_source) const
 {
-    Beading ret = parent->compute(thickness, bead_count);
+    Beading ret = parent->compute(thickness, bead_count, distance_to_source);
 
     // Actual count and thickness as represented by extant walls. Don't count any potential zero-width 'signaling' walls.
     bead_count = std::count_if(ret.bead_widths.begin(), ret.bead_widths.end(), [](const coord_t width) { return width > 0; });

@@ -351,11 +351,13 @@ void SkeletalTrapezoidation::computeSegmentCellRange(vd_t::cell_type& cell, Poin
 
 SkeletalTrapezoidation::SkeletalTrapezoidation(const Polygons& polys, const BeadingStrategy& beading_strategy,
                                                AngleRadians transitioning_angle, coord_t discretization_step_size,
-                                               coord_t transition_filter_dist, coord_t beading_propagation_transition_dist
+                                               coord_t transition_filter_dist, coord_t beading_propagation_transition_dist,
+                                               coord_t max_width
     ): transitioning_angle(transitioning_angle), 
     discretization_step_size(discretization_step_size),
     transition_filter_dist(transition_filter_dist),
     beading_propagation_transition_dist(beading_propagation_transition_dist),
+    max_width(max_width),
     beading_strategy(beading_strategy)
 {
     constructFromPolygons(polys);
@@ -652,7 +654,8 @@ void SkeletalTrapezoidation::updateBeadCount()
     {
         if (edge.data.isCentral())
         {
-            edge.to->data.bead_count = beading_strategy.getOptimalBeadCount(edge.to->data.distance_to_boundary * 2);
+            coord_t width = std::min(edge.to->data.distance_to_boundary * 2, max_width);
+            edge.to->data.bead_count = beading_strategy.getOptimalBeadCount(width);
         }
     }
 
@@ -671,7 +674,8 @@ void SkeletalTrapezoidation::updateBeadCount()
                     node.data.distance_to_boundary = std::min(node.data.distance_to_boundary, edge->to->data.distance_to_boundary + vSize(edge->from->p - edge->to->p));
                 } while (edge = edge->twin->next, edge != node.incident_edge);
             }
-            coord_t bead_count = beading_strategy.getOptimalBeadCount(node.data.distance_to_boundary * 2);
+            coord_t width = std::min(node.data.distance_to_boundary * 2, max_width);
+            coord_t bead_count = beading_strategy.getOptimalBeadCount(width);
             node.data.bead_count = bead_count;
         }
     }
@@ -733,7 +737,8 @@ bool SkeletalTrapezoidation::filterNoncentralRegions(edge_t* to_edge, coord_t be
     {
         next_edge->data.setIsCentral(true);
         next_edge->twin->data.setIsCentral(true);
-        next_edge->to->data.bead_count = beading_strategy.getOptimalBeadCount(next_edge->to->data.distance_to_boundary * 2);
+        coord_t width = std::min(next_edge->to->data.distance_to_boundary * 2, max_width);
+        next_edge->to->data.bead_count = beading_strategy.getOptimalBeadCount(width);
         next_edge->to->data.transition_ratio = 0;
     }
     return dissolve; // Dissolving only depend on the one edge going upward. There cannot be multiple edges going upward.
@@ -1502,18 +1507,19 @@ void SkeletalTrapezoidation::generateSegments()
             }
             if (node.data.transition_ratio == 0)
             {
-                node_beadings.emplace_back(new BeadingPropagation(beading_strategy.compute(node.data.distance_to_boundary * 2, node.data.bead_count)));
+                coord_t width = std::min(node.data.distance_to_boundary * 2, max_width);
+                node_beadings.emplace_back(new BeadingPropagation(beading_strategy.compute(width, node.data.bead_count, node.data.distance_to_boundary * 2)));
                 node.data.setBeading(node_beadings.back());
-                assert(node_beadings.back()->beading.total_thickness == node.data.distance_to_boundary * 2);
-                if(node_beadings.back()->beading.total_thickness != node.data.distance_to_boundary * 2)
-                {
-                    RUN_ONCE(logWarning("If transitioning to an endpoint (ratio 0), the node should be exactly in the middle."));
-                }
+                // assert(node_beadings.back()->beading.total_thickness == node.data.distance_to_boundary * 2);
+                // if(node_beadings.back()->beading.total_thickness != node.data.distance_to_boundary * 2)
+                // {
+                //     RUN_ONCE(logWarning("If transitioning to an endpoint (ratio 0), the node should be exactly in the middle."));
+                // }
             }
             else
             {
-                Beading low_count_beading = beading_strategy.compute(node.data.distance_to_boundary * 2, node.data.bead_count);
-                Beading high_count_beading = beading_strategy.compute(node.data.distance_to_boundary * 2, node.data.bead_count + 1);
+                Beading low_count_beading = beading_strategy.compute(node.data.distance_to_boundary * 2, node.data.bead_count, node.data.distance_to_boundary * 2);
+                Beading high_count_beading = beading_strategy.compute(node.data.distance_to_boundary * 2, node.data.bead_count + 1, node.data.distance_to_boundary * 2);
                 Beading merged = interpolate(low_count_beading, 1.0 - node.data.transition_ratio, high_count_beading);
                 node_beadings.emplace_back(new BeadingPropagation(merged));
                 node.data.setBeading(node_beadings.back());
@@ -1618,11 +1624,11 @@ void SkeletalTrapezoidation::propagateBeadingsDownward(edge_t* edge_to_peak, ptr
 {
     coord_t length = vSize(edge_to_peak->to->p - edge_to_peak->from->p);
     BeadingPropagation& top_beading = *getOrCreateBeading(edge_to_peak->to, node_beadings);
-    assert(top_beading.beading.total_thickness >= edge_to_peak->to->data.distance_to_boundary * 2);
-    if(top_beading.beading.total_thickness < edge_to_peak->to->data.distance_to_boundary * 2)
-    {
-        RUN_ONCE(logWarning("Top bead is beyond the center of the total width."));
-    }
+    // assert(top_beading.beading.total_thickness >= edge_to_peak->to->data.distance_to_boundary * 2);
+    // if(top_beading.beading.total_thickness < edge_to_peak->to->data.distance_to_boundary * 2)
+    // {
+    //     RUN_ONCE(logWarning("Top bead is beyond the center of the total width."));
+    // }
     assert(!top_beading.is_upward_propagated_only);
 
     if(!edge_to_peak->from->data.hasBeading())
@@ -1631,11 +1637,11 @@ void SkeletalTrapezoidation::propagateBeadingsDownward(edge_t* edge_to_peak, ptr
         propagated_beading.dist_from_top_source += length;
         node_beadings.emplace_back(new BeadingPropagation(propagated_beading));
         edge_to_peak->from->data.setBeading(node_beadings.back());
-        assert(propagated_beading.beading.total_thickness >= edge_to_peak->from->data.distance_to_boundary * 2);
-        if(propagated_beading.beading.total_thickness < edge_to_peak->from->data.distance_to_boundary * 2)
-        {
-            RUN_ONCE(logWarning("Propagated bead is beyond the center of the total width."));
-        }
+        // assert(propagated_beading.beading.total_thickness >= edge_to_peak->from->data.distance_to_boundary * 2);
+        // if(propagated_beading.beading.total_thickness < edge_to_peak->from->data.distance_to_boundary * 2)
+        // {
+        //     RUN_ONCE(logWarning("Propagated bead is beyond the center of the total width."));
+        // }
     }
     else
     {
@@ -1653,11 +1659,11 @@ void SkeletalTrapezoidation::propagateBeadingsDownward(edge_t* edge_to_peak, ptr
             Beading merged_beading = interpolate(top_beading.beading, ratio_of_top, bottom_beading.beading, edge_to_peak->from->data.distance_to_boundary);
             bottom_beading = BeadingPropagation(merged_beading);
             bottom_beading.is_upward_propagated_only = false;
-            assert(merged_beading.total_thickness >= edge_to_peak->from->data.distance_to_boundary * 2);
-            if(merged_beading.total_thickness < edge_to_peak->from->data.distance_to_boundary * 2)
-            {
-                RUN_ONCE(logWarning("Merged bead is beyond the center of the total width."));
-            }
+            // assert(merged_beading.total_thickness >= edge_to_peak->from->data.distance_to_boundary * 2);
+            // if(merged_beading.total_thickness < edge_to_peak->from->data.distance_to_boundary * 2)
+            // {
+            //     RUN_ONCE(logWarning("Merged bead is beyond the center of the total width."));
+            // }
         }
     }
 }
@@ -1751,11 +1757,11 @@ void SkeletalTrapezoidation::generateJunctions(ptr_vector_t<BeadingPropagation>&
         edge_.data.setExtrusionJunctions(edge_junctions.back());  // initialization
         LineJunctions& ret = *edge_junctions.back();
 
-        assert(beading->total_thickness >= edge->to->data.distance_to_boundary * 2);
-        if(beading->total_thickness < edge->to->data.distance_to_boundary * 2)
-        {
-            RUN_ONCE(logWarning("Generated junction is beyond the center of total width."))
-        }
+        // assert(beading->total_thickness >= edge->to->data.distance_to_boundary * 2);
+        // if(beading->total_thickness < edge->to->data.distance_to_boundary * 2)
+        // {
+        //     RUN_ONCE(logWarning("Generated junction is beyond the center of total width."))
+        // }
 
         Point a = edge->to->p;
         Point b = edge->from->p;
@@ -1833,10 +1839,12 @@ std::shared_ptr<SkeletalTrapezoidationJoint::BeadingPropagation> SkeletalTrapezo
                 RUN_ONCE(logError("Unknown beading for non-central node!\n"));
             }
             assert(dist != std::numeric_limits<coord_t>::max());
-            node->data.bead_count = beading_strategy.getOptimalBeadCount(dist * 2);
+            coord_t width = std::min(dist * 2, max_width);
+            node->data.bead_count = beading_strategy.getOptimalBeadCount(width);
         }
         assert(node->data.bead_count != -1);
-        node_beadings.emplace_back(new BeadingPropagation(beading_strategy.compute(node->data.distance_to_boundary * 2, node->data.bead_count)));
+        coord_t width = std::min(node->data.distance_to_boundary * 2, max_width);
+        node_beadings.emplace_back(new BeadingPropagation(beading_strategy.compute(width, node->data.bead_count, node->data.distance_to_boundary * 2)));
         node->data.setBeading(node_beadings.back());
     }
     assert(node->data.hasBeading());

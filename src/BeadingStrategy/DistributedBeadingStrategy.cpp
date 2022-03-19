@@ -27,7 +27,7 @@ DistributedBeadingStrategy::DistributedBeadingStrategy(const coord_t optimal_wid
     name = "DistributedBeadingStrategy";
 }
 
-DistributedBeadingStrategy::Beading DistributedBeadingStrategy::compute(coord_t thickness, coord_t bead_count) const
+DistributedBeadingStrategy::Beading DistributedBeadingStrategy::compute(coord_t thickness, coord_t bead_count, coord_t distance_to_source) const
 {
     Beading ret;
 

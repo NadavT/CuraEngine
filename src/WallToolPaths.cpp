@@ -128,6 +128,7 @@ const VariableWidthPaths& WallToolPaths::generate()
                 beads_width
             );
         const coord_t transition_filter_dist = settings.get<coord_t>("wall_transition_filter_distance");
+        const coord_t wall_total_width = (no_ratio) ? MM2INT(1000) : settings.get<coord_t>("wall_thickness") * 2;
         SkeletalTrapezoidation wall_maker
         (
             prepared_outline,
@@ -135,7 +136,8 @@ const VariableWidthPaths& WallToolPaths::generate()
             beading_strat->getTransitioningAngle(),
             discretization_step_size,
             transition_filter_dist,
-            wall_transition_length
+            wall_transition_length,
+            wall_total_width
         );
         wall_maker.generateToolpaths(toolpaths);
         computeInnerContour();

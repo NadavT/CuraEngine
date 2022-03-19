@@ -115,7 +115,7 @@ std::vector<coord_t> RatioDistributedBeadingStrategy::getFixedOptimalWidthValues
     return full_beads_widths;
 }
 
-BeadingStrategy::Beading RatioDistributedBeadingStrategy::compute(coord_t thickness, coord_t bead_count) const
+BeadingStrategy::Beading RatioDistributedBeadingStrategy::compute(coord_t thickness, coord_t bead_count, coord_t distance_to_source) const
 {
     Beading ret;
 

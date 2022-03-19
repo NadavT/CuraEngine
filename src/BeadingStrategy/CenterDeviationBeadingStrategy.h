@@ -40,7 +40,7 @@ class CenterDeviationBeadingStrategy : public BeadingStrategy
                                    Ratio wall_add_middle_threshold);
 
     ~CenterDeviationBeadingStrategy() override{};
-    Beading compute(coord_t thickness, coord_t bead_count) const override;
+    Beading compute(coord_t thickness, coord_t bead_count, coord_t distance_to_source) const override;
     coord_t getOptimalThickness(coord_t bead_count) const override;
     coord_t getTransitionThickness(coord_t lower_bead_count) const override;
     coord_t getOptimalBeadCount(coord_t thickness) const override;

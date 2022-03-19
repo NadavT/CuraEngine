@@ -47,7 +47,7 @@ public:
      * 
      * \note The \p bead_count might be different from the \ref BeadingStrategy::optimal_bead_count
      */
-    virtual Beading compute(coord_t thickness, coord_t bead_count) const = 0;
+    virtual Beading compute(coord_t thickness, coord_t bead_count, coord_t distance_to_source) const = 0;
 
     /*!
      * The ideal thickness for a given \param bead_count

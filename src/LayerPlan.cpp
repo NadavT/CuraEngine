@@ -922,6 +922,7 @@ void LayerPlan::addWall(const LineJunctions& wall, int start_idx, const Settings
     {
         const ExtrusionJunction& p1 = wall[(wall.size() + start_idx + point_idx * direction) % wall.size()];
         const coord_t line_width = (p0.w + p1.w) / 2; //For lines which in itself vary in width, use the average width of the variable line.
+        //TODO NADAV: Add transition widths
 
         if (!bridge_wall_mask.empty())
         {

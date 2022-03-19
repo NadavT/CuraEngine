@@ -19,7 +19,7 @@ std::string WideningBeadingStrategy::toString() const
     return std::string("Widening+") + parent->toString();
 }
 
-WideningBeadingStrategy::Beading WideningBeadingStrategy::compute(coord_t thickness, coord_t bead_count) const
+WideningBeadingStrategy::Beading WideningBeadingStrategy::compute(coord_t thickness, coord_t bead_count, coord_t distance_to_source) const
 {
     if (thickness < optimal_width)
     {
@@ -38,7 +38,7 @@ WideningBeadingStrategy::Beading WideningBeadingStrategy::compute(coord_t thickn
     }
     else
     {
-        return parent->compute(thickness, bead_count);
+        return parent->compute(thickness, bead_count, distance_to_source);
     }
 }
 
