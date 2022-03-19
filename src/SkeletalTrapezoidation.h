@@ -170,7 +170,7 @@ protected:
      * Transfer an edge from the VD to the HE and perform discretization of parabolic edges (and vertex-vertex edges)
      * \p prev_edge serves as input and output. May be null as input.
      */
-    void transferEdge(Point from, Point to, vd_t::edge_type& vd_edge, edge_t*& prev_edge, Point& start_source_point, Point& end_source_point, const std::vector<Point>& points, const std::vector<Segment>& segments);
+    void transferEdge(Point from, Point to, vd_t::edge_type& vd_edge, edge_t*& prev_edge, Point& start_source_point, Point& end_source_point, const std::vector<Point>& points, const std::vector<Segment>& segments, float width_factor);
 
     /*!
      * Discretize a Voronoi edge that represents the medial axis of a vertex-

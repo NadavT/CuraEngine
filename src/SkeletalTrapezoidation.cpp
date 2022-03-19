@@ -42,7 +42,7 @@ SkeletalTrapezoidation::node_t& SkeletalTrapezoidation::makeNode(vd_t::vertex_ty
     }
 }
 
-void SkeletalTrapezoidation::transferEdge(Point from, Point to, vd_t::edge_type& vd_edge, edge_t*& prev_edge, Point& start_source_point, Point& end_source_point, const std::vector<Point>& points, const std::vector<Segment>& segments)
+void SkeletalTrapezoidation::transferEdge(Point from, Point to, vd_t::edge_type& vd_edge, edge_t*& prev_edge, Point& start_source_point, Point& end_source_point, const std::vector<Point>& points, const std::vector<Segment>& segments, float width_factor)
 {
     auto he_edge_it = vd_edge_to_he_edge.find(vd_edge.twin());
     if (he_edge_it != vd_edge_to_he_edge.end())
@@ -92,7 +92,7 @@ void SkeletalTrapezoidation::transferEdge(Point from, Point to, vd_t::edge_type&
             assert(twin->prev->twin->prev); // Prev segment along parabola
             
             constexpr bool is_not_next_to_start_or_end = false; // Only ribs at the end of a cell should be skipped
-            graph.makeRib(prev_edge, start_source_point, end_source_point, is_not_next_to_start_or_end);
+            graph.makeRib(prev_edge, start_source_point, end_source_point, is_not_next_to_start_or_end, width_factor);
         }
         assert(prev_edge);
     }
@@ -145,7 +145,7 @@ void SkeletalTrapezoidation::transferEdge(Point from, Point to, vd_t::edge_type&
             if (p1_idx < discretized.size() - 1)
             { // Rib for last segment gets introduced outside this function!
                 constexpr bool is_not_next_to_start_or_end = false; // Only ribs at the end of a cell should be skipped
-                graph.makeRib(prev_edge, start_source_point, end_source_point, is_not_next_to_start_or_end);
+                graph.makeRib(prev_edge, start_source_point, end_source_point, is_not_next_to_start_or_end, width_factor);
             }
         }
         assert(prev_edge);
@@ -369,14 +369,18 @@ void SkeletalTrapezoidation::constructFromPolygons(const Polygons& polys)
     vd_node_to_he_node.clear();
 
     std::vector<Point> points; // Remains empty
+    std::unordered_map<Point, float> widthFactors;
 
     std::vector<Segment> segments;
     for (size_t poly_idx = 0; poly_idx < polys.size(); poly_idx++)
     {
+        float i = 0.25;
         ConstPolygonRef poly = polys[poly_idx];
         for (size_t point_idx = 0; point_idx < poly.size(); point_idx++)
         {
             segments.emplace_back(&polys, poly_idx, point_idx);
+            widthFactors[poly[point_idx]] = i;
+            i += 0.25;
         }
     }
 
@@ -416,23 +420,23 @@ void SkeletalTrapezoidation::constructFromPolygons(const Polygons& polys)
         
         // Copy start to end edge to graph
         edge_t* prev_edge = nullptr;
-        transferEdge(start_source_point, VoronoiUtils::p(starting_vonoroi_edge->vertex1()), *starting_vonoroi_edge, prev_edge, start_source_point, end_source_point, points, segments);
+        transferEdge(start_source_point, VoronoiUtils::p(starting_vonoroi_edge->vertex1()), *starting_vonoroi_edge, prev_edge, start_source_point, end_source_point, points, segments, widthFactors[start_source_point]);
         node_t* starting_node = vd_node_to_he_node[starting_vonoroi_edge->vertex0()];
         starting_node->data.distance_to_boundary = 0;
 
         constexpr bool is_next_to_start_or_end = true;
-        graph.makeRib(prev_edge, start_source_point, end_source_point, is_next_to_start_or_end);
+        graph.makeRib(prev_edge, start_source_point, end_source_point, is_next_to_start_or_end, widthFactors[start_source_point]);
         for (vd_t::edge_type* vd_edge = starting_vonoroi_edge->next(); vd_edge != ending_vonoroi_edge; vd_edge = vd_edge->next())
         {
             assert(vd_edge->is_finite());
             Point v1 = VoronoiUtils::p(vd_edge->vertex0());
             Point v2 = VoronoiUtils::p(vd_edge->vertex1());
-            transferEdge(v1, v2, *vd_edge, prev_edge, start_source_point, end_source_point, points, segments);
+            transferEdge(v1, v2, *vd_edge, prev_edge, start_source_point, end_source_point, points, segments, widthFactors[start_source_point]);
 
-            graph.makeRib(prev_edge, start_source_point, end_source_point, vd_edge->next() == ending_vonoroi_edge);
+            graph.makeRib(prev_edge, start_source_point, end_source_point, vd_edge->next() == ending_vonoroi_edge, widthFactors[start_source_point]);
         }
 
-        transferEdge(VoronoiUtils::p(ending_vonoroi_edge->vertex0()), end_source_point, *ending_vonoroi_edge, prev_edge, start_source_point, end_source_point, points, segments);
+        transferEdge(VoronoiUtils::p(ending_vonoroi_edge->vertex0()), end_source_point, *ending_vonoroi_edge, prev_edge, start_source_point, end_source_point, points, segments, widthFactors[start_source_point]);
         prev_edge->to->data.distance_to_boundary = 0;
     }
 
@@ -469,7 +473,7 @@ void SkeletalTrapezoidation::constructFromPolygons(const Polygons& polys)
         for (node_t& node : graph.nodes)
         {
             plotFile << "plt.plot(" << node.p.X << ", " << node.p.Y << ", marker='o')" << std::endl;
-            plotFile << "plt.annotate(" << node.data.distance_to_boundary << ", (" << node.p.X << ", " << node.p.Y << "))" << std::endl;
+            plotFile << "plt.annotate(" << node.data.distance_to_boundary << ", " << node.data.width_factor << ", (" << node.p.X << ", " << node.p.Y << "))" << std::endl;
         }
         for (edge_t& edge : graph.edges)
         {
@@ -654,7 +658,7 @@ void SkeletalTrapezoidation::updateBeadCount()
     {
         if (edge.data.isCentral())
         {
-            coord_t width = std::min(edge.to->data.distance_to_boundary * 2, max_width);
+            coord_t width = std::min(edge.to->data.distance_to_boundary * 2, static_cast<coord_t>(max_width * edge.to->data.width_factor));
             edge.to->data.bead_count = beading_strategy.getOptimalBeadCount(width);
         }
     }
@@ -674,7 +678,7 @@ void SkeletalTrapezoidation::updateBeadCount()
                     node.data.distance_to_boundary = std::min(node.data.distance_to_boundary, edge->to->data.distance_to_boundary + vSize(edge->from->p - edge->to->p));
                 } while (edge = edge->twin->next, edge != node.incident_edge);
             }
-            coord_t width = std::min(node.data.distance_to_boundary * 2, max_width);
+            coord_t width = std::min(node.data.distance_to_boundary * 2, static_cast<coord_t>(max_width * node.data.width_factor));
             coord_t bead_count = beading_strategy.getOptimalBeadCount(width);
             node.data.bead_count = bead_count;
         }
@@ -737,7 +741,7 @@ bool SkeletalTrapezoidation::filterNoncentralRegions(edge_t* to_edge, coord_t be
     {
         next_edge->data.setIsCentral(true);
         next_edge->twin->data.setIsCentral(true);
-        coord_t width = std::min(next_edge->to->data.distance_to_boundary * 2, max_width);
+        coord_t width = std::min(next_edge->to->data.distance_to_boundary * 2, static_cast<coord_t>(max_width * next_edge->to->data.width_factor));
         next_edge->to->data.bead_count = beading_strategy.getOptimalBeadCount(width);
         next_edge->to->data.transition_ratio = 0;
     }
@@ -1507,7 +1511,7 @@ void SkeletalTrapezoidation::generateSegments()
             }
             if (node.data.transition_ratio == 0)
             {
-                coord_t width = std::min(node.data.distance_to_boundary * 2, max_width);
+                coord_t width = std::min(node.data.distance_to_boundary * 2, static_cast<coord_t>(max_width * node.data.width_factor));
                 node_beadings.emplace_back(new BeadingPropagation(beading_strategy.compute(width, node.data.bead_count, node.data.distance_to_boundary * 2)));
                 node.data.setBeading(node_beadings.back());
                 // assert(node_beadings.back()->beading.total_thickness == node.data.distance_to_boundary * 2);
@@ -1839,11 +1843,11 @@ std::shared_ptr<SkeletalTrapezoidationJoint::BeadingPropagation> SkeletalTrapezo
                 RUN_ONCE(logError("Unknown beading for non-central node!\n"));
             }
             assert(dist != std::numeric_limits<coord_t>::max());
-            coord_t width = std::min(dist * 2, max_width);
+            coord_t width = std::min(dist * 2, static_cast<coord_t>(max_width * node->data.width_factor));
             node->data.bead_count = beading_strategy.getOptimalBeadCount(width);
         }
         assert(node->data.bead_count != -1);
-        coord_t width = std::min(node->data.distance_to_boundary * 2, max_width);
+        coord_t width = std::min(node->data.distance_to_boundary * 2, static_cast<coord_t>(max_width * node->data.width_factor));
         node_beadings.emplace_back(new BeadingPropagation(beading_strategy.compute(width, node->data.bead_count, node->data.distance_to_boundary * 2)));
         node->data.setBeading(node_beadings.back());
     }
