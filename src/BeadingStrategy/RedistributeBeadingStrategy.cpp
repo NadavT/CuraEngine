@@ -71,7 +71,7 @@ BeadingStrategy::Beading RedistributeBeadingStrategy::compute(coord_t thickness,
         const coord_t virtual_distance_to_source = distance_to_source - outer_bead_width * 2;
 
         // Calculate the beads and widths of the inner walls only
-        ret = parent->compute(virtual_thickness, virtual_bead_count, virtual_distance_to_source
+        ret = parent->compute(virtual_thickness, virtual_bead_count, virtual_distance_to_source);
 
         // Insert the outer beads
         ret.bead_widths.insert(ret.bead_widths.begin(), outer_bead_width);
