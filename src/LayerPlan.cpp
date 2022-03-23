@@ -924,15 +924,15 @@ void LayerPlan::addWall(const LineJunctions& wall, int start_idx, const Settings
         const coord_t line_width = (p0.w + p1.w) / 2; //For lines which in itself vary in width, use the average width of the variable line.
         //TODO NADAV: Add transition widths
         std::vector<ExtrusionJunction> points;
-        const unsigned int steps = std::abs(p1.w - p0.w) / 100;
+        const int steps = std::abs(p1.w - p0.w) / 100;
         points.reserve(steps + 1);
         ExtrusionJunction &prev = p0;
-        for (size_t i = 0; i < static_cast<size_t>(steps); i++)
+        for (int i = 0; i < steps - 1; i++)
         {
             ExtrusionJunction mid_pos = prev;
-            mid_pos.p.X += (p1.p.X - prev.p.X) / steps;
-            mid_pos.p.Y += (p1.p.Y - prev.p.Y) / steps;
-            mid_pos.w += (p1.w - prev.w) / steps;
+            mid_pos.p.X += (p1.p.X - p0.p.X) / steps;
+            mid_pos.p.Y += (p1.p.Y - p0.p.Y) / steps;
+            mid_pos.w += (p1.w - p0.w) / steps;
             points.push_back(mid_pos);
             prev = points.back();
         }
