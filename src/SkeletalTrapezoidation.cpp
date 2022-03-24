@@ -352,13 +352,14 @@ void SkeletalTrapezoidation::computeSegmentCellRange(vd_t::cell_type& cell, Poin
 SkeletalTrapezoidation::SkeletalTrapezoidation(const Polygons& polys, const BeadingStrategy& beading_strategy,
                                                AngleRadians transitioning_angle, coord_t discretization_step_size,
                                                coord_t transition_filter_dist, coord_t beading_propagation_transition_dist,
-                                               coord_t max_width
-    ): transitioning_angle(transitioning_angle), 
-    discretization_step_size(discretization_step_size),
-    transition_filter_dist(transition_filter_dist),
-    beading_propagation_transition_dist(beading_propagation_transition_dist),
-    max_width(max_width),
-    beading_strategy(beading_strategy)
+                                               coord_t max_width, const std::vector<float>& weights)
+    : transitioning_angle(transitioning_angle)
+    , discretization_step_size(discretization_step_size)
+    , transition_filter_dist(transition_filter_dist)
+    , beading_propagation_transition_dist(beading_propagation_transition_dist)
+    , max_width(max_width)
+    , beading_strategy(beading_strategy)
+    , weights(weights)
 {
     constructFromPolygons(polys);
 }
@@ -374,20 +375,18 @@ void SkeletalTrapezoidation::constructFromPolygons(const Polygons& polys)
     std::vector<Segment> segments;
     for (size_t poly_idx = 0; poly_idx < polys.size(); poly_idx++)
     {
-        float i = 0.70;
         ConstPolygonRef poly = polys[poly_idx];
         for (size_t point_idx = 0; point_idx < poly.size(); point_idx++)
         {
             segments.emplace_back(&polys, poly_idx, point_idx);
-            if (max_width != MM2INT(1000))
+            if (max_width != MM2INT(1000) && point_idx < weights.size())
             {
-                widthFactors[poly[point_idx]] = i;
+                widthFactors[poly[point_idx]] = weights[point_idx];
             }
             else
             {
                 widthFactors[poly[point_idx]] = 1;
             }
-            i += 0.1;
         }
     }
 

@@ -83,6 +83,17 @@ const VariableWidthPaths& WallToolPaths::generate()
     coord_t min_extrusion_width = 0;
     coord_t max_extrusion_width = MM2INT(1000);
 
+    std::vector<float> weights;
+    if (!no_ratio)
+    {
+        std::istringstream weights_str;
+        weights_str.str(settings.get<std::string>("vertices_weights"));
+        for (std::string weight; std::getline(weights_str, weight, ','); )
+        {
+            weights.push_back(atof(weight.c_str()));
+        }
+    }
+    
     if (strategy_type == StrategyType::RatioDistributed)
     {
         const coord_t wall_total_width = settings.get<coord_t>("wall_thickness");
@@ -90,8 +101,9 @@ const VariableWidthPaths& WallToolPaths::generate()
         max_extrusion_width = settings.get<coord_t>("max_extrusion_width");
         std::istringstream ratios;
         ratios.str(settings.get<std::string>("perimeters_ratio"));
-        for (std::string ratio; std::getline(ratios, ratio, ':'); ) {
-            beads_width.push_back(std::max(std::min(static_cast<coord_t>(atof(ratio.c_str()) * wall_total_width), max_extrusion_width), min_extrusion_width));
+        for (std::string ratio; std::getline(ratios, ratio, ':'); )
+        {
+            beads_width.push_back(std::clamp(static_cast<coord_t>(atof(ratio.c_str()) * wall_total_width), max_extrusion_width, min_extrusion_width));
         }
         std::reverse(beads_width.begin(), beads_width.end());
         beads_width.erase(beads_width.begin() + inset_count, beads_width.end());
@@ -142,7 +154,8 @@ const VariableWidthPaths& WallToolPaths::generate()
             discretization_step_size,
             transition_filter_dist,
             wall_transition_length,
-            wall_total_width
+            wall_total_width,
+            weights
         );
         wall_maker.generateToolpaths(toolpaths);
         computeInnerContour();
