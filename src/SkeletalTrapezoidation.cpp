@@ -42,7 +42,7 @@ SkeletalTrapezoidation::node_t& SkeletalTrapezoidation::makeNode(vd_t::vertex_ty
     }
 }
 
-void SkeletalTrapezoidation::transferEdge(Point from, Point to, vd_t::edge_type& vd_edge, edge_t*& prev_edge, Point& start_source_point, Point& end_source_point, const std::vector<Point>& points, const std::vector<Segment>& segments, float width_factor)
+void SkeletalTrapezoidation::transferEdge(Point from, Point to, vd_t::edge_type& vd_edge, edge_t*& prev_edge, Point& start_source_point, Point& end_source_point, const std::vector<Point>& points, const std::vector<Segment>& segments, const std::unordered_map<Point, float>& width_factors)
 {
     auto he_edge_it = vd_edge_to_he_edge.find(vd_edge.twin());
     if (he_edge_it != vd_edge_to_he_edge.end())
@@ -92,7 +92,7 @@ void SkeletalTrapezoidation::transferEdge(Point from, Point to, vd_t::edge_type&
             assert(twin->prev->twin->prev); // Prev segment along parabola
             
             constexpr bool is_not_next_to_start_or_end = false; // Only ribs at the end of a cell should be skipped
-            graph.makeRib(prev_edge, start_source_point, end_source_point, is_not_next_to_start_or_end, width_factor);
+            graph.makeRib(prev_edge, start_source_point, end_source_point, is_not_next_to_start_or_end, width_factors);
         }
         assert(prev_edge);
     }
@@ -145,7 +145,7 @@ void SkeletalTrapezoidation::transferEdge(Point from, Point to, vd_t::edge_type&
             if (p1_idx < discretized.size() - 1)
             { // Rib for last segment gets introduced outside this function!
                 constexpr bool is_not_next_to_start_or_end = false; // Only ribs at the end of a cell should be skipped
-                graph.makeRib(prev_edge, start_source_point, end_source_point, is_not_next_to_start_or_end, width_factor);
+                graph.makeRib(prev_edge, start_source_point, end_source_point, is_not_next_to_start_or_end, width_factors);
             }
         }
         assert(prev_edge);
@@ -358,8 +358,8 @@ SkeletalTrapezoidation::SkeletalTrapezoidation(const Polygons& polys, const Bead
     , transition_filter_dist(transition_filter_dist)
     , beading_propagation_transition_dist(beading_propagation_transition_dist)
     , max_width(max_width)
-    , beading_strategy(beading_strategy)
     , weights(weights)
+    , beading_strategy(beading_strategy)
 {
     constructFromPolygons(polys);
 }
@@ -426,24 +426,24 @@ void SkeletalTrapezoidation::constructFromPolygons(const Polygons& polys)
         
         // Copy start to end edge to graph
         edge_t* prev_edge = nullptr;
-        transferEdge(start_source_point, VoronoiUtils::p(starting_vonoroi_edge->vertex1()), *starting_vonoroi_edge, prev_edge, start_source_point, end_source_point, points, segments, (widthFactors[start_source_point] + widthFactors[end_source_point]) / 2);
+        transferEdge(start_source_point, VoronoiUtils::p(starting_vonoroi_edge->vertex1()), *starting_vonoroi_edge, prev_edge, start_source_point, end_source_point, points, segments, widthFactors);
         node_t* starting_node = vd_node_to_he_node[starting_vonoroi_edge->vertex0()];
         starting_node->data.distance_to_boundary = 0;
         starting_node->data.width_factor = widthFactors[starting_node->p];
 
         constexpr bool is_next_to_start_or_end = true;
-        graph.makeRib(prev_edge, start_source_point, end_source_point, is_next_to_start_or_end, (widthFactors[start_source_point] + widthFactors[end_source_point]) / 2);
+        graph.makeRib(prev_edge, start_source_point, end_source_point, is_next_to_start_or_end, widthFactors);
         for (vd_t::edge_type* vd_edge = starting_vonoroi_edge->next(); vd_edge != ending_vonoroi_edge; vd_edge = vd_edge->next())
         {
             assert(vd_edge->is_finite());
             Point v1 = VoronoiUtils::p(vd_edge->vertex0());
             Point v2 = VoronoiUtils::p(vd_edge->vertex1());
-            transferEdge(v1, v2, *vd_edge, prev_edge, start_source_point, end_source_point, points, segments, (widthFactors[start_source_point] + widthFactors[end_source_point]) / 2);
+            transferEdge(v1, v2, *vd_edge, prev_edge, start_source_point, end_source_point, points, segments, widthFactors);
 
-            graph.makeRib(prev_edge, start_source_point, end_source_point, vd_edge->next() == ending_vonoroi_edge, (widthFactors[start_source_point] + widthFactors[end_source_point]) / 2);
+            graph.makeRib(prev_edge, start_source_point, end_source_point, vd_edge->next() == ending_vonoroi_edge, widthFactors);
         }
 
-        transferEdge(VoronoiUtils::p(ending_vonoroi_edge->vertex0()), end_source_point, *ending_vonoroi_edge, prev_edge, start_source_point, end_source_point, points, segments, (widthFactors[start_source_point] + widthFactors[end_source_point]) / 2);
+        transferEdge(VoronoiUtils::p(ending_vonoroi_edge->vertex0()), end_source_point, *ending_vonoroi_edge, prev_edge, start_source_point, end_source_point, points, segments, widthFactors);
         prev_edge->to->data.distance_to_boundary = 0;
         prev_edge->to->data.width_factor = widthFactors[prev_edge->to->p];
     }
@@ -565,6 +565,7 @@ void SkeletalTrapezoidation::generateToolpaths(VariableWidthPaths& generated_too
     RUN_ONCE(
     std::ofstream toolpathFile;
     toolpathFile.open("toolpath_plot.txt");
+    int i = 0;
     for (const auto& path : generated_toolpaths)
     {
         for (const auto& line : path)
@@ -572,7 +573,7 @@ void SkeletalTrapezoidation::generateToolpaths(VariableWidthPaths& generated_too
             for (const auto& junction : line.junctions)
             {
                 toolpathFile << "plt.plot(" << junction.p.X << ", " << junction.p.Y << ", marker='o')" << std::endl;
-                toolpathFile << "plt.annotate(\"" << junction.perimeter_index << ", " << junction.w << "\", (" << junction.p.X << ", " << junction.p.Y << "))" << std::endl;
+                toolpathFile << "plt.annotate(\"" << i++ << ", " << junction.perimeter_index << ", " << junction.w << "\", (" << junction.p.X << ", " << junction.p.Y << "))" << std::endl;
             }
         }
     }

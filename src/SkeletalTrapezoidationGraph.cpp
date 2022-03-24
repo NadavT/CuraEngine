@@ -340,7 +340,7 @@ void SkeletalTrapezoidationGraph::collapseSmallEdges(coord_t snap_dist)
     }
 }
 
-void SkeletalTrapezoidationGraph::makeRib(edge_t*& prev_edge, Point start_source_point, Point end_source_point, bool is_next_to_start_or_end, float width_factor)
+void SkeletalTrapezoidationGraph::makeRib(edge_t*& prev_edge, Point start_source_point, Point end_source_point, bool is_next_to_start_or_end, const std::unordered_map<Point, float>& width_factors)
 {
     Point p = LinearAlg2D::getClosestOnLine(prev_edge->to->p, start_source_point, end_source_point);
     coord_t dist = vSize(prev_edge->to->p - p);
@@ -350,8 +350,20 @@ void SkeletalTrapezoidationGraph::makeRib(edge_t*& prev_edge, Point start_source
     nodes.emplace_front(SkeletalTrapezoidationJoint(), p);
     node_t* node = &nodes.front();
     node->data.distance_to_boundary = 0;
-    node->data.width_factor = width_factor;
-    
+
+
+    const float total_dist = static_cast<float>(vSize(start_source_point - end_source_point));
+    if (total_dist <= std::numeric_limits<float>::epsilon() * 100)
+    {
+        node->data.width_factor = width_factors.at(start_source_point);
+    }
+    else
+    {
+        const float ratio_from_start = 1 - vSize(start_source_point - p) / total_dist;
+        const float ratio_from_end = 1 - vSize(end_source_point - p) / total_dist;
+        node->data.width_factor = width_factors.at(start_source_point) * ratio_from_start + width_factors.at(end_source_point) * ratio_from_end;
+    }
+
     edges.emplace_front(SkeletalTrapezoidationEdge(SkeletalTrapezoidationEdge::EdgeType::EXTRA_VD));
     edge_t* forth_edge = &edges.front();
     edges.emplace_front(SkeletalTrapezoidationEdge(SkeletalTrapezoidationEdge::EdgeType::EXTRA_VD));

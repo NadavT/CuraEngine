@@ -84,7 +84,7 @@ public:
      */
     void collapseSmallEdges(coord_t snap_dist = 5);
 
-    void makeRib(edge_t*& prev_edge, Point start_source_point, Point end_source_point, bool is_next_to_start_or_end, float width_factor);
+    void makeRib(edge_t*& prev_edge, Point start_source_point, Point end_source_point, bool is_next_to_start_or_end, const std::unordered_map<Point, float>& width_factors);
 
     /*!
      * Insert a node into the graph and connect it to the input polygon using ribs
