@@ -114,7 +114,7 @@ coord_t LimitedBeadingStrategy::getTransitionThickness(coord_t lower_bead_count)
 
 coord_t LimitedBeadingStrategy::getOptimalBeadCount(coord_t thickness) const
 {
-    return parent->getOptimalBeadCount(thickness);
+    // return parent->getOptimalBeadCount(thickness);
     coord_t parent_bead_count = parent->getOptimalBeadCount(thickness);
     if (parent_bead_count <= max_bead_count)
     {
