@@ -1572,6 +1572,27 @@ void SkeletalTrapezoidation::generateSegments()
     ptr_vector_t<LineJunctions> edge_junctions; // junctions ordered high R to low R
     generateJunctions(node_beadings, edge_junctions);
 
+    RUN_ONCE(
+    // std::ofstream toolpathFile;
+    // toolpathFile.open("junctions_plot.txt");
+    for (const auto& line : edge_junctions)
+    {
+        for (const auto& edge : *line)
+        {
+            logDebug("edge: (%d, %d), %d\n", edge.p.X, edge.p.Y, edge.w);
+        }
+        // for (const auto& line : path)
+        // {
+        //     for (const auto& junction : line.junctions)
+        //     {
+        //         toolpathFile << "plt.plot(" << junction.p.X << ", " << junction.p.Y << ", marker='o')" << std::endl;
+        //         toolpathFile << "plt.annotate(\"" << i++ << ", " << junction.perimeter_index << ", " << junction.w << "\", (" << junction.p.X << ", " << junction.p.Y << "))" << std::endl;
+        //     }
+        // }
+    }
+    // toolpathFile.close();
+    )
+
     connectJunctions(edge_junctions);
     
     generateLocalMaximaSingleBeads();
