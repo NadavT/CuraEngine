@@ -39,7 +39,9 @@ public:
         const coord_t outer_wall_offset = 0,
         const int inward_distributed_center_wall_count = 2,
         const std::vector<coord_t>& bead_widths = {},
-        const double minimum_variable_line_width = 0.5
+        const double minimum_variable_line_width = 0.5,
+        const coord_t min_extrusion_width = 0,
+        const coord_t max_extrusion_width = MM2INT(1000)
     );
 };
 

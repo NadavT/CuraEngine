@@ -10,6 +10,7 @@ namespace cura
 {
 RatioDistributedBeadingStrategy::RatioDistributedBeadingStrategy(const std::vector<coord_t>& optimal_width_values,
                                                                  const coord_t minimum_line_width,
+                                                                 const coord_t maximum_line_width,
                                                                  const coord_t default_transition_length,
                                                                  const AngleRadians transitioning_angle,
                                                                  const Ratio wall_split_middle_threshold,
@@ -18,6 +19,7 @@ RatioDistributedBeadingStrategy::RatioDistributedBeadingStrategy(const std::vect
     : BeadingStrategy(optimal_width_values[0], default_transition_length, transitioning_angle)
     , optimal_width_values(optimal_width_values)
     , minimum_line_width(minimum_line_width)
+    , maximum_line_width(maximum_line_width)
     , wall_split_middle_threshold(wall_split_middle_threshold)
     , wall_add_middle_threshold(wall_add_middle_threshold)
 {
@@ -146,7 +148,7 @@ BeadingStrategy::Beading RatioDistributedBeadingStrategy::compute(coord_t thickn
             const float weight_fraction = weights[bead_idx] / total_weight;
             const coord_t splitup_left_over_weight = to_be_divided * weight_fraction;
             // const coord_t width = optimal_width + splitup_left_over_weight;
-            const coord_t width = full_beads_width[bead_idx] + splitup_left_over_weight;
+            const coord_t width = std::clamp(full_beads_width[bead_idx] + splitup_left_over_weight, minimum_line_width, maximum_line_width);
             // if (optimal_width_values.size() == 2)
             // {
             //     logDebug("Bead width %d = %d.\n", bead_idx, width);
@@ -165,7 +167,7 @@ BeadingStrategy::Beading RatioDistributedBeadingStrategy::compute(coord_t thickn
     }
     else if (bead_count == 2)
     {
-        const coord_t outer_width = thickness / 2;
+        const coord_t outer_width = std::clamp(thickness / 2, minimum_line_width, maximum_line_width);
         ret.bead_widths.emplace_back(outer_width);
         ret.bead_widths.emplace_back(outer_width);
         ret.toolpath_locations.emplace_back(outer_width / 2);
@@ -174,7 +176,7 @@ BeadingStrategy::Beading RatioDistributedBeadingStrategy::compute(coord_t thickn
     }
     else if (bead_count == 1)
     {
-        const coord_t outer_width = thickness;
+        const coord_t outer_width = std::clamp(thickness, minimum_line_width, maximum_line_width);
         ret.bead_widths.emplace_back(outer_width);
         ret.toolpath_locations.emplace_back(outer_width / 2);
         ret.left_over = 0;

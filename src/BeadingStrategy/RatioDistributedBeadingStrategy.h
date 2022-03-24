@@ -32,6 +32,7 @@ class RatioDistributedBeadingStrategy : public BeadingStrategy
   public:
     RatioDistributedBeadingStrategy(const std::vector<coord_t>& optimal_width_values,
                                     const coord_t minimum_line_width,
+                                    const coord_t maximum_line_width,
                                     const coord_t default_transition_length,
                                     const AngleRadians transitioning_angle,
                                     const Ratio wall_split_middle_threshold,
@@ -52,6 +53,7 @@ class RatioDistributedBeadingStrategy : public BeadingStrategy
   protected:
     std::vector<coord_t> optimal_width_values;
     const coord_t minimum_line_width;
+    const coord_t maximum_line_width;
 
     // For uneven numbers of lines: Minimum factor of the optimal width for which the middle line will be split into two lines.
     Ratio wall_split_middle_threshold;

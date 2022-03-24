@@ -80,12 +80,14 @@ const VariableWidthPaths& WallToolPaths::generate()
     prepared_outline.removeSmallAreas(small_area_length * small_area_length, false);
 
     std::vector<coord_t> beads_width;
+    coord_t min_extrusion_width = 0;
+    coord_t max_extrusion_width = MM2INT(1000);
 
     if (strategy_type == StrategyType::RatioDistributed)
     {
         const coord_t wall_total_width = settings.get<coord_t>("wall_thickness");
-        const coord_t min_extrusion_width = settings.get<coord_t>("min_extrusion_width");
-        const coord_t max_extrusion_width = settings.get<coord_t>("max_extrusion_width");
+        min_extrusion_width = settings.get<coord_t>("min_extrusion_width");
+        max_extrusion_width = settings.get<coord_t>("max_extrusion_width");
         std::istringstream ratios;
         ratios.str(settings.get<std::string>("perimeters_ratio"));
         for (std::string ratio; std::getline(ratios, ratio, ':'); ) {
@@ -125,7 +127,10 @@ const VariableWidthPaths& WallToolPaths::generate()
                 max_bead_count,
                 wall_0_inset,
                 wall_distribution_count,
-                beads_width
+                beads_width,
+                0.5,
+                min_extrusion_width,
+                max_extrusion_width
             );
         const coord_t transition_filter_dist = settings.get<coord_t>("wall_transition_filter_distance");
         const coord_t wall_total_width = (no_ratio) ? bead_width_0 : settings.get<coord_t>("wall_thickness");
