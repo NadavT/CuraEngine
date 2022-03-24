@@ -921,7 +921,6 @@ void LayerPlan::addWall(const LineJunctions& wall, int start_idx, const Settings
     for(size_t point_idx = 1; point_idx < max_index; point_idx++)
     {
         const ExtrusionJunction& p1 = wall[(wall.size() + start_idx + point_idx * direction) % wall.size()];
-        const coord_t line_width = (p0.w + p1.w) / 2; //For lines which in itself vary in width, use the average width of the variable line.
         //TODO NADAV: Add transition widths
         std::vector<ExtrusionJunction> points;
         const int steps = std::abs(p1.w - p0.w) / 10;
@@ -966,46 +965,46 @@ void LayerPlan::addWall(const LineJunctions& wall, int start_idx, const Settings
         p0 = p1;
     }
 
-    // if (wall.size() >= 2)
-    // {
-    //     if (!bridge_wall_mask.empty())
-    //     {
-    //         computeDistanceToBridgeStart((start_idx + wall.size() - 1) % wall.size());
-    //     }
+    if (wall.size() >= 2)
+    {
+        if (!bridge_wall_mask.empty())
+        {
+            computeDistanceToBridgeStart((start_idx + wall.size() - 1) % wall.size());
+        }
 
-    //     if (wall_0_wipe_dist > 0 && !is_linked_path)
-    //     { // apply outer wall wipe
-    //         p0 = wall[start_idx];
-    //         int distance_traversed = 0;
-    //         for (unsigned int point_idx = 1; ; point_idx++)
-    //         {
-    //             if(point_idx > wall.size() && distance_traversed == 0) //Wall has a total circumference of 0. This loop would never end.
-    //             {
-    //                 break; //No wipe if the wall has no circumference.
-    //             }
-    //             ExtrusionJunction p1 = wall[(start_idx + point_idx) % wall.size()];
-    //             int p0p1_dist = vSize(p1 - p0);
-    //             if (distance_traversed + p0p1_dist >= wall_0_wipe_dist)
-    //             {
-    //                 Point vector = p1.p - p0.p;
-    //                 Point half_way = p0.p + normal(vector, wall_0_wipe_dist - distance_traversed);
-    //                 addTravel_simple(half_way);
-    //                 break;
-    //             }
-    //             else
-    //             {
-    //                 addTravel_simple(p1.p);
-    //                 distance_traversed += p0p1_dist;
-    //             }
-    //             p0 = p1;
-    //         }
-    //         forceNewPathStart();
-    //     }
-    // }
-    // else
-    // {
-    //     logWarning("WARNING: point added as wall sequence! (LayerPlan)\n");
-    // }
+        if (wall_0_wipe_dist > 0 && !is_linked_path)
+        { // apply outer wall wipe
+            p0 = wall[start_idx];
+            int distance_traversed = 0;
+            for (unsigned int point_idx = 1; ; point_idx++)
+            {
+                if(point_idx > wall.size() && distance_traversed == 0) //Wall has a total circumference of 0. This loop would never end.
+                {
+                    break; //No wipe if the wall has no circumference.
+                }
+                ExtrusionJunction p1 = wall[(start_idx + point_idx) % wall.size()];
+                int p0p1_dist = vSize(p1 - p0);
+                if (distance_traversed + p0p1_dist >= wall_0_wipe_dist)
+                {
+                    Point vector = p1.p - p0.p;
+                    Point half_way = p0.p + normal(vector, wall_0_wipe_dist - distance_traversed);
+                    addTravel_simple(half_way);
+                    break;
+                }
+                else
+                {
+                    addTravel_simple(p1.p);
+                    distance_traversed += p0p1_dist;
+                }
+                p0 = p1;
+            }
+            forceNewPathStart();
+        }
+    }
+    else
+    {
+        logWarning("WARNING: point added as wall sequence! (LayerPlan)\n");
+    }
 }
 
 void LayerPlan::addInfillWall(const LineJunctions& wall, const GCodePathConfig& path_config,
