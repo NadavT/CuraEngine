@@ -5,6 +5,7 @@
 
 #include <algorithm>
 #include <numeric>
+#include <assert.h>
 
 namespace cura
 {
@@ -80,7 +81,12 @@ coord_t RatioDistributedBeadingStrategy::getOptimalBeadCount(coord_t thickness) 
         coord_t current_thickness = 0;
         for (size_t i = 0; i < optimal_width_values.size() / 2; i++)
         {
-            current_thickness += 2 * optimal_width_values[i];
+            current_thickness += optimal_width_values[i];
+            if (current_thickness >= thickness)
+            {
+                return i * 2 + 1;
+            }
+            current_thickness += optimal_width_values[i];
             if (current_thickness >= thickness)
             {
                 return (i + 1) * 2;
@@ -168,6 +174,8 @@ BeadingStrategy::Beading RatioDistributedBeadingStrategy::compute(coord_t thickn
     else if (bead_count == 2)
     {
         const coord_t outer_width = std::clamp(thickness / 2, minimum_line_width, maximum_line_width);
+        assert(outer_width > 0);
+        assert(thickness - outer_width / 2);
         ret.bead_widths.emplace_back(outer_width);
         ret.bead_widths.emplace_back(outer_width);
         ret.toolpath_locations.emplace_back(outer_width / 2);
@@ -177,6 +185,7 @@ BeadingStrategy::Beading RatioDistributedBeadingStrategy::compute(coord_t thickn
     else if (bead_count == 1)
     {
         const coord_t outer_width = std::clamp(thickness, minimum_line_width, maximum_line_width);
+        assert(outer_width > 0);
         ret.bead_widths.emplace_back(outer_width);
         ret.toolpath_locations.emplace_back(outer_width / 2);
         ret.left_over = 0;
