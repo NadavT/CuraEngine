@@ -562,6 +562,17 @@ protected:
     std::shared_ptr<BeadingPropagation> getOrCreateBeading(node_t* node, ptr_vector_t<BeadingPropagation>& node_beadings);
 
     /*!
+     * Get the beading at a certain node of the skeletal graph, or create one if
+     * it doesn't have one yet.
+     *
+     * This is a lazy get.
+     * \param edge The edge to get the beading from.
+     * \param node_beadings A list of all beadings for nodes.
+     * \return The beading of the edge from node.
+     */
+    std::shared_ptr<BeadingPropagation> getOrCreateBeading(edge_t* edge, ptr_vector_t<BeadingPropagation>& node_beadings);
+
+    /*!
      * In case we cannot find the beading of a node, get a beading from the
      * nearest node.
      * \param node The node to attempt to get a beading from. The actual node

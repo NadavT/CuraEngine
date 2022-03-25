@@ -1806,7 +1806,7 @@ void SkeletalTrapezoidation::generateJunctions(ptr_vector_t<BeadingPropagation>&
             continue;
         }
 
-        Beading* beading = &getOrCreateBeading(edge->from, node_beadings)->beading;
+        Beading* beading = &getOrCreateBeading(edge, node_beadings)->beading;
         edge_junctions.emplace_back(std::make_shared<LineJunctions>());
         edge_.data.setExtrusionJunctions(edge_junctions.back());  // initialization
         LineJunctions& ret = *edge_junctions.back();
@@ -1868,11 +1868,11 @@ std::shared_ptr<SkeletalTrapezoidationJoint::BeadingPropagation> SkeletalTrapezo
         if (node->data.bead_count == -1)
         { // This bug is due to too small central edges
             constexpr coord_t nearby_dist = 100; // TODO
-            // auto nearest_beading = getNearestBeading(node, nearby_dist);
-            // if (nearest_beading)
-            // {
-            //     return nearest_beading;
-            // }
+            auto nearest_beading = getNearestBeading(node, nearby_dist);
+            if (nearest_beading)
+            {
+                return nearest_beading;
+            }
             
             // Else make a new beading:
             bool has_central_edge = false;
@@ -1899,6 +1899,34 @@ std::shared_ptr<SkeletalTrapezoidationJoint::BeadingPropagation> SkeletalTrapezo
         assert(node->data.bead_count != -1);
         coord_t width = std::min(node->incident_edge->to->data.distance_to_boundary * 2, static_cast<coord_t>(max_width * node->data.width_factor * 2));
         node_beadings.emplace_back(new BeadingPropagation(beading_strategy.compute(width, node->data.bead_count, node->incident_edge->to->data.distance_to_boundary * 2)));
+        node->data.setBeading(node_beadings.back());
+    }
+    assert(node->data.hasBeading());
+    return node->data.getBeading();
+}
+
+std::shared_ptr<SkeletalTrapezoidationJoint::BeadingPropagation> SkeletalTrapezoidation::getOrCreateBeading(edge_t* edge, ptr_vector_t<BeadingPropagation>& node_beadings)
+{
+    node_t* node = edge->from;
+    if (! node->data.hasBeading())
+    {
+        if (node->data.bead_count == -1)
+        { 
+            bool first = true;
+            coord_t dist = std::numeric_limits<coord_t>::max();
+            for (edge_t* curr_edge = edge; curr_edge && (first || curr_edge != edge); curr_edge = curr_edge->next)
+            {
+                assert(curr_edge->to->data.distance_to_boundary >= 0);
+                dist = std::min(dist, curr_edge->to->data.distance_to_boundary + vSize(curr_edge->to->p - curr_edge->from->p));
+                first = false;
+            }
+            assert(dist != std::numeric_limits<coord_t>::max());
+            coord_t width = std::min(dist * 2, static_cast<coord_t>(max_width * node->data.width_factor * 2));
+            node->data.bead_count = beading_strategy.getOptimalBeadCount(width);
+        }
+        assert(node->data.bead_count != -1);
+        coord_t width = std::min(edge->to->data.distance_to_boundary * 2, static_cast<coord_t>(max_width * node->data.width_factor * 2));
+        node_beadings.emplace_back(new BeadingPropagation(beading_strategy.compute(width, node->data.bead_count, edge->to->data.distance_to_boundary * 2)));
         node->data.setBeading(node_beadings.back());
     }
     assert(node->data.hasBeading());
