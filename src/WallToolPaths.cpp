@@ -103,7 +103,7 @@ const VariableWidthPaths& WallToolPaths::generate()
         ratios.str(settings.get<std::string>("perimeters_ratio"));
         for (std::string ratio; std::getline(ratios, ratio, ':'); )
         {
-            beads_width.push_back(std::clamp(static_cast<coord_t>(atof(ratio.c_str()) * wall_total_width), max_extrusion_width, min_extrusion_width));
+            beads_width.push_back(std::clamp(static_cast<coord_t>(atof(ratio.c_str()) * wall_total_width), min_extrusion_width, max_extrusion_width));
         }
         std::reverse(beads_width.begin(), beads_width.end());
         beads_width.erase(beads_width.begin() + inset_count, beads_width.end());
