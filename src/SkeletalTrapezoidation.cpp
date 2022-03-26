@@ -687,6 +687,7 @@ void SkeletalTrapezoidation::updateBeadCount()
     {
         if (edge.data.isCentral())
         {
+            assert(edge.to->data.width_factor > 0);
             coord_t width = std::min(edge.to->data.distance_to_boundary * 2, static_cast<coord_t>(max_width * edge.to->data.width_factor * 2));
             edge.to->data.bead_count = beading_strategy.getOptimalBeadCount(width);
         }
@@ -707,6 +708,7 @@ void SkeletalTrapezoidation::updateBeadCount()
                     node.data.distance_to_boundary = std::min(node.data.distance_to_boundary, edge->to->data.distance_to_boundary + vSize(edge->from->p - edge->to->p));
                 } while (edge = edge->twin->next, edge != node.incident_edge);
             }
+            assert(node.incident_edge->to->data.width_factor > 0);
             coord_t width = std::min(node.data.distance_to_boundary * 2, static_cast<coord_t>(max_width * node.incident_edge->to->data.width_factor * 2));
             coord_t bead_count = beading_strategy.getOptimalBeadCount(width);
             node.data.bead_count = bead_count;
@@ -770,6 +772,7 @@ bool SkeletalTrapezoidation::filterNoncentralRegions(edge_t* to_edge, coord_t be
     {
         next_edge->data.setIsCentral(true);
         next_edge->twin->data.setIsCentral(true);
+        assert(next_edge->to->data.width_factor > 0);
         coord_t width = std::min(next_edge->to->data.distance_to_boundary * 2, static_cast<coord_t>(max_width * next_edge->to->data.width_factor));
         next_edge->to->data.bead_count = beading_strategy.getOptimalBeadCount(width);
         next_edge->to->data.transition_ratio = 0;
@@ -1540,6 +1543,7 @@ void SkeletalTrapezoidation::generateSegments()
             }
             if (node.data.transition_ratio == 0)
             {
+                assert(node.incident_edge->to->data.width_factor > 0);
                 coord_t width = std::min(node.data.distance_to_boundary * 2, static_cast<coord_t>(max_width * node.incident_edge->to->data.width_factor * 2));
                 node_beadings.emplace_back(new BeadingPropagation(beading_strategy.compute(width, node.data.bead_count, node.data.distance_to_boundary * 2)));
                 node.data.setBeading(node_beadings.back());
@@ -1893,10 +1897,12 @@ std::shared_ptr<SkeletalTrapezoidationJoint::BeadingPropagation> SkeletalTrapezo
                 RUN_ONCE(logError("Unknown beading for non-central node!\n"));
             }
             assert(dist != std::numeric_limits<coord_t>::max());
+            assert(node->data.width_factor > 0);
             coord_t width = std::min(dist * 2, static_cast<coord_t>(max_width * node->data.width_factor * 2));
             node->data.bead_count = beading_strategy.getOptimalBeadCount(width);
         }
         assert(node->data.bead_count != -1);
+        assert(node->data.width_factor > 0);
         coord_t width = std::min(node->incident_edge->to->data.distance_to_boundary * 2, static_cast<coord_t>(max_width * node->data.width_factor * 2));
         node_beadings.emplace_back(new BeadingPropagation(beading_strategy.compute(width, node->data.bead_count, node->incident_edge->to->data.distance_to_boundary * 2)));
         node->data.setBeading(node_beadings.back());
@@ -1921,10 +1927,12 @@ std::shared_ptr<SkeletalTrapezoidationJoint::BeadingPropagation> SkeletalTrapezo
                 first = false;
             }
             assert(dist != std::numeric_limits<coord_t>::max());
+            assert(node->data.width_factor > 0);
             coord_t width = std::min(dist * 2, static_cast<coord_t>(max_width * node->data.width_factor * 2));
             node->data.bead_count = beading_strategy.getOptimalBeadCount(width);
         }
         assert(node->data.bead_count != -1);
+        assert(node->data.width_factor > 0);
         coord_t width = std::min(edge->to->data.distance_to_boundary * 2, static_cast<coord_t>(max_width * node->data.width_factor * 2));
         node_beadings.emplace_back(new BeadingPropagation(beading_strategy.compute(width, node->data.bead_count, edge->to->data.distance_to_boundary * 2)));
         node->data.setBeading(node_beadings.back());

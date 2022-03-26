@@ -38,7 +38,7 @@ public:
     : distance_to_boundary(-1)
     , bead_count(-1)
     , transition_ratio(0)
-    , width_factor(1)
+    , width_factor(-1)
     {}
 
     bool hasBeading() const

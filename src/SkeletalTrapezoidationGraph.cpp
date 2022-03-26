@@ -363,6 +363,7 @@ void SkeletalTrapezoidationGraph::makeRib(edge_t*& prev_edge, Point start_source
         const float ratio_from_end = 1 - vSize(end_source_point - p) / total_dist;
         node->data.width_factor = width_factors.at(start_source_point) * ratio_from_start + width_factors.at(end_source_point) * ratio_from_end;
     }
+    prev_edge->to->data.width_factor = node->data.width_factor;
 
     edges.emplace_front(SkeletalTrapezoidationEdge(SkeletalTrapezoidationEdge::EdgeType::EXTRA_VD));
     edge_t* forth_edge = &edges.front();
