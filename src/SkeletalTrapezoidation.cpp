@@ -430,6 +430,7 @@ void SkeletalTrapezoidation::constructFromPolygons(const Polygons& polys)
         node_t* starting_node = vd_node_to_he_node[starting_vonoroi_edge->vertex0()];
         starting_node->data.distance_to_boundary = 0;
         starting_node->data.width_factor = widthFactors[starting_node->p];
+        vd_node_to_he_node[starting_vonoroi_edge->vertex1()]->data.width_factor = std::max(vd_node_to_he_node[starting_vonoroi_edge->vertex1()]->data.width_factor, starting_node->data.width_factor);
 
         constexpr bool is_next_to_start_or_end = true;
         graph.makeRib(prev_edge, start_source_point, end_source_point, is_next_to_start_or_end, widthFactors);
@@ -446,6 +447,7 @@ void SkeletalTrapezoidation::constructFromPolygons(const Polygons& polys)
         transferEdge(VoronoiUtils::p(ending_vonoroi_edge->vertex0()), end_source_point, *ending_vonoroi_edge, prev_edge, start_source_point, end_source_point, points, segments, widthFactors);
         prev_edge->to->data.distance_to_boundary = 0;
         prev_edge->to->data.width_factor = widthFactors[prev_edge->to->p];
+        prev_edge->from->data.width_factor = std::max(prev_edge->to->data.width_factor, prev_edge->from->data.width_factor);
     }
 
     separatePointyQuadEndNodes();
@@ -473,26 +475,6 @@ void SkeletalTrapezoidation::constructFromPolygons(const Polygons& polys)
         {
             plotFile << "plt.plot([" << segment.from().X << ", " << segment.to().X << "], [" << segment.from().Y << ", " << segment.to().Y << "])" << std::endl;
         }
-        plotFile.close();
-
-        std::ofstream edgesFile;
-        plotFile.open("skeleton_plot.txt");
-        edgesFile.open("edges_plot.txt");
-        for (node_t& node : graph.nodes)
-        {
-            plotFile << "plt.plot(" << node.p.X << ", " << node.p.Y << ", marker='o')" << std::endl;
-            plotFile << "plt.annotate(\"" << node.data.distance_to_boundary << ", " << node.data.width_factor << "\", (" << node.p.X << ", " << node.p.Y << "))" << std::endl;
-        }
-        for (edge_t& edge : graph.edges)
-        {
-            if (edge.from && edge.to)
-            {
-                plotFile << "plt.plot([" << edge.from->p.X << ", " << edge.to->p.X << "], [" << edge.from->p.Y << ", " << edge.to->p.Y << "], linestyle='dashed')" << std::endl;
-                edgesFile << "plt.plot([" << edge.from->p.X << ", " << edge.to->p.X << "], ";
-                edgesFile << "[" << edge.from->p.Y << ", " << edge.to->p.Y << "])" << std::endl;
-            }
-        }
-        edgesFile.close();
         plotFile.close();
     );
     }
@@ -563,6 +545,27 @@ void SkeletalTrapezoidation::generateToolpaths(VariableWidthPaths& generated_too
     #pragma omp critical
     {
     RUN_ONCE(
+    std::ofstream plotFile;
+    std::ofstream edgesFile;
+    plotFile.open("skeleton_plot.txt");
+    edgesFile.open("edges_plot.txt");
+    for (node_t& node : graph.nodes)
+    {
+        plotFile << "plt.plot(" << node.p.X << ", " << node.p.Y << ", marker='o')" << std::endl;
+        plotFile << "plt.annotate(\"" << node.data.distance_to_boundary << ", " << node.data.width_factor << "\", (" << node.p.X << ", " << node.p.Y << "))" << std::endl;
+    }
+    for (edge_t& edge : graph.edges)
+    {
+        if (edge.from && edge.to)
+        {
+            plotFile << "plt.plot([" << edge.from->p.X << ", " << edge.to->p.X << "], [" << edge.from->p.Y << ", " << edge.to->p.Y << "], linestyle='dashed')" << std::endl;
+            edgesFile << "plt.plot([" << edge.from->p.X << ", " << edge.to->p.X << "], ";
+            edgesFile << "[" << edge.from->p.Y << ", " << edge.to->p.Y << "])" << std::endl;
+        }
+    }
+    edgesFile.close();
+    plotFile.close();
+
     std::ofstream toolpathFile;
     toolpathFile.open("toolpath_plot.txt");
     int i = 0;
@@ -687,6 +690,7 @@ void SkeletalTrapezoidation::updateBeadCount()
     {
         if (edge.data.isCentral())
         {
+            edge.to->data.width_factor = std::max(edge.to->data.width_factor, edge.from->data.width_factor);
             assert(edge.to->data.width_factor > 0);
             coord_t width = std::min(edge.to->data.distance_to_boundary * 2, static_cast<coord_t>(max_width * edge.to->data.width_factor * 2));
             edge.to->data.bead_count = beading_strategy.getOptimalBeadCount(width);

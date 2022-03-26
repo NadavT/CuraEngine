@@ -292,6 +292,7 @@ void SkeletalTrapezoidationGraph::collapseSmallEdges(coord_t snap_dist)
                 }
             }
             
+            quad_mid->from->data.width_factor = std::max(quad_mid->from->data.width_factor, quad_mid->to->data.width_factor);
             nodes.erase(node_locator[quad_mid->to]);
 
             quad_mid->prev->next = quad_mid->next;
@@ -322,6 +323,7 @@ void SkeletalTrapezoidationGraph::collapseSmallEdges(coord_t snap_dist)
                     quad_end->from->incident_edge = quad_end->prev->twin;
                 }
             }
+            quad_start->to->data.width_factor = std::max(quad_start->from->data.width_factor, quad_start->to->data.width_factor);
             nodes.erase(node_locator[quad_start->from]);
 
             quad_start->twin->twin = quad_end->twin;
@@ -363,7 +365,8 @@ void SkeletalTrapezoidationGraph::makeRib(edge_t*& prev_edge, Point start_source
         const float ratio_from_end = 1 - vSize(end_source_point - p) / total_dist;
         node->data.width_factor = width_factors.at(start_source_point) * ratio_from_start + width_factors.at(end_source_point) * ratio_from_end;
     }
-    prev_edge->to->data.width_factor = node->data.width_factor;
+    
+    prev_edge->to->data.width_factor = std::max(node->data.width_factor, prev_edge->to->data.width_factor);
 
     edges.emplace_front(SkeletalTrapezoidationEdge(SkeletalTrapezoidationEdge::EdgeType::EXTRA_VD));
     edge_t* forth_edge = &edges.front();
