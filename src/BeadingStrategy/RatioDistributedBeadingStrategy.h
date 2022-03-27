@@ -31,6 +31,7 @@ class RatioDistributedBeadingStrategy : public BeadingStrategy
 {
   public:
     RatioDistributedBeadingStrategy(const std::vector<coord_t>& optimal_width_values,
+                                    const std::vector<Ratio>& optimal_width_ratios,
                                     const coord_t minimum_line_width,
                                     const coord_t maximum_line_width,
                                     const coord_t default_transition_length,
@@ -52,6 +53,7 @@ class RatioDistributedBeadingStrategy : public BeadingStrategy
 
   protected:
     std::vector<coord_t> optimal_width_values;
+    std::vector<Ratio> optimal_width_ratios;
     const coord_t minimum_line_width;
     const coord_t maximum_line_width;
 

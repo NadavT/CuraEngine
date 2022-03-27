@@ -80,6 +80,7 @@ const VariableWidthPaths& WallToolPaths::generate()
     prepared_outline.removeSmallAreas(small_area_length * small_area_length, false);
 
     std::vector<coord_t> beads_width;
+    std::vector<Ratio> beads_ratios;
     coord_t min_extrusion_width = 0;
     coord_t max_extrusion_width = MM2INT(1000);
 
@@ -103,11 +104,16 @@ const VariableWidthPaths& WallToolPaths::generate()
         ratios.str(settings.get<std::string>("perimeters_ratio"));
         for (std::string ratio; std::getline(ratios, ratio, ':'); )
         {
-            beads_width.push_back(std::clamp(static_cast<coord_t>(atof(ratio.c_str()) * wall_total_width), min_extrusion_width, max_extrusion_width));
+            Ratio curr_ratio = atof(ratio.c_str());
+            beads_ratios.push_back(curr_ratio);
+            beads_width.push_back(std::clamp(static_cast<coord_t>(curr_ratio * wall_total_width), min_extrusion_width, max_extrusion_width));
         }
         std::reverse(beads_width.begin(), beads_width.end());
         beads_width.erase(beads_width.begin() + inset_count, beads_width.end());
         beads_width.insert(beads_width.end(), beads_width.rbegin(), beads_width.rend());
+        std::reverse(beads_ratios.begin(), beads_ratios.end());
+        beads_ratios.erase(beads_ratios.begin() + inset_count, beads_ratios.end());
+        beads_ratios.insert(beads_ratios.end(), beads_ratios.rbegin(), beads_ratios.rend());
         // logDebug("beads widths:\n");
         // int i = 0;
         // for (auto width : beads_width)
@@ -140,6 +146,7 @@ const VariableWidthPaths& WallToolPaths::generate()
                 wall_0_inset,
                 wall_distribution_count,
                 beads_width,
+                beads_ratios,
                 0.5,
                 min_extrusion_width,
                 max_extrusion_width
