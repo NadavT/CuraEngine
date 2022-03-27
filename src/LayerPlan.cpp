@@ -918,20 +918,27 @@ void LayerPlan::addWall(const LineJunctions& wall, int start_idx, const Settings
 
     const int direction = is_reversed ? -1 : 1;
     const size_t max_index = is_closed ? wall.size() + 1 : wall.size();
+    const coord_t discretization_width_step = settings.get<coord_t>("line_discretization_width_step");
+    const coord_t discretization_min_step_len = settings.get<coord_t>("line_discretization_min_step_len");
     for(size_t point_idx = 1; point_idx < max_index; point_idx++)
     {
         const ExtrusionJunction& p1 = wall[(wall.size() + start_idx + point_idx * direction) % wall.size()];
         //TODO NADAV: Add transition widths
         std::vector<ExtrusionJunction> points;
-        const int steps = std::abs(p1.w - p0.w) / 10;
+        const int steps_by_widths = std::abs(p1.w - p0.w) / discretization_width_step;
+        const int steps_by_len = vSize2(p1.p - p0.p) / discretization_min_step_len;
+        const int steps = std::min(steps_by_widths, steps_by_len) + 1;
+        const auto x_step_diff = (p1.p.X - p0.p.X) / steps;
+        const auto y_step_diff = (p1.p.Y - p0.p.Y) / steps;
+        const auto w_step_diff = (p1.w - p0.w) / steps;
         points.reserve(steps + 1);
         ExtrusionJunction prev = p0;
         for (int i = 0; i < steps - 1; i++)
         {
             ExtrusionJunction mid_pos = prev;
-            mid_pos.p.X += (p1.p.X - p0.p.X) / steps;
-            mid_pos.p.Y += (p1.p.Y - p0.p.Y) / steps;
-            mid_pos.w += (p1.w - p0.w) / steps;
+            mid_pos.p.X += x_step_diff;
+            mid_pos.p.Y += y_step_diff;
+            mid_pos.w += w_step_diff;
             points.push_back(mid_pos);
             prev = points.back();
         }
